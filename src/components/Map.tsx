@@ -6,6 +6,7 @@ import { Marker, Source, Layer, Popup } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Fish } from "@/types/fish";
 import FishMarker from "./FishMarker";
+import RadarOverlay from "./RadarOverlay";
 
 interface MapComponentProps {
   fishes: Fish[];
@@ -49,6 +50,7 @@ export default function MapComponent({
   const [tempGeo, setTempGeo] = useState<any | null>(null);
   const [sensors, setSensors] = useState<any[]>([]);
   const [selectedSensor, setSelectedSensor] = useState<any | null>(null);
+  const [pingedIds, setPingedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // fetch temperature sensors and their latest reading
@@ -88,6 +90,22 @@ export default function MapComponent({
 
   return (
     <div className="w-full h-full relative">
+      {/* Radar overlay canvas - only visible on the map container */}
+      <RadarOverlay
+        mapRef={mapRef}
+        fishes={fishes}
+        onPing={(id) => {
+          setPingedIds((prev) => new Set(prev).add(id));
+          // remove ping after short duration
+          setTimeout(() => {
+            setPingedIds((prev) => {
+              const copy = new Set(prev);
+              copy.delete(id);
+              return copy;
+            });
+          }, 900);
+        }}
+      />
       <Map
         ref={mapRef}
         mapStyle={"https://tiles.openfreemap.org/styles/liberty"}
@@ -144,6 +162,7 @@ export default function MapComponent({
             fish={fish}
             isHovered={fish.id === hoveredFishId}
             isAnyHovered={isAnyHovered}
+            pinged={pingedIds.has(fish.id)}
           />
         ))}
 

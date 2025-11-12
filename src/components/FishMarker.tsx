@@ -8,12 +8,14 @@ interface FishMarkerProps {
   fish: Fish;
   isHovered: boolean;
   isAnyHovered: boolean;
+  pinged?: boolean;
 }
 
 export default function FishMarker({
   fish,
   isHovered,
   isAnyHovered,
+  pinged = false,
 }: FishMarkerProps) {
   const pulseClass = getRarityPulseClass(fish.rarity);
 
@@ -45,6 +47,10 @@ export default function FishMarker({
         <div
           className={`absolute -inset-[6px] w-5 h-5 rounded-full opacity-75 ${rarityColorClass.split(" ")[0]} ${isDimmed ? "" : pulseClass}`}
         />
+        {/* Radar ping effect */}
+        {pinged && (
+          <div className="absolute -inset-2 w-6 h-6 rounded-full pointer-events-none radar-ping" />
+        )}
         {/* Fish marker */}
         <div
           className={`w-2 h-2 rounded-full border-2 border-deep-ocean transition-all duration-300 group-hover:w-3 group-hover:h-3 shadow-[--shadow-marker] ${rarityColorClass.split(" ")[0]} ${rarityColorClass.split(" ")[1]} ${isHovered ? "scale-150" : "scale-100"}`}
