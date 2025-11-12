@@ -7,7 +7,13 @@ export interface Fish {
     latitude: number;
     longitude: number;
     timestamp: string;
+    temperature?: number | null;
+    temperatureTimestamp?: string | null;
+    isTemperatureInPreferredRange?: boolean | null;
   };
+  // Preferred temperature profile (client-friendly)
+  preferredTemperatureMin?: number;
+  preferredTemperatureMax?: number;
   // Optional rich metadata to support detailed card view
   species?: string;
   description?: string;
