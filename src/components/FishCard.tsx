@@ -321,7 +321,7 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") onClick?.(fish);
       }}
-      className="relative border border-panel-border rounded-lg overflow-hidden bg-gradient-to-b from-[#081525] to-[#021018] shadow-[--shadow-cockpit-border] cursor-pointer"
+      className="relative border border-panel-border rounded-lg overflow-hidden bg-gradient-to-b from-[#081525] to-[#021018] shadow-[--shadow-cockpit-border] cursor-pointer flex flex-col h-full"
       onMouseEnter={() => onHover?.(fish.id)}
       onMouseLeave={() => onHover?.(null)}
     >
@@ -362,7 +362,7 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       </div>
 
       {/* Details */}
-      <div className="px-3 py-2">
+      <div className="px-3 py-2 flex-1">
         <div className="text-xs text-text-secondary mb-2">{description}</div>
 
         <div className="flex gap-3">

@@ -100,7 +100,8 @@ body {
   font-family: "Courier New", monospace;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  /* allow the page to scroll on small screens / long pages */
+  overflow: auto;
 }
 
 html,

@@ -41,7 +41,7 @@ export default function SightingsMap({ fishes, sightings }: Props) {
   }, [fishes, sightings]);
 
   return (
-    <div className="w-full h-96 bg-panel-bg border border-panel-border rounded-lg overflow-hidden">
+    <div className="w-full h-72 md:h-96 lg:h-[520px] bg-panel-bg border border-panel-border rounded-lg overflow-hidden">
       <MapComponent fishes={displayFishes} hoveredFishId={null} />
     </div>
   );
