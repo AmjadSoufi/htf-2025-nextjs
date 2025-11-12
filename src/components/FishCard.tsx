@@ -107,7 +107,7 @@ export default function FishCard({ fish, onHover }: FishCardProps) {
           >
             {fish.rarity}
           </div>
-          {(selectedPreview || thumbnail || fish.image) ? (
+          {selectedPreview || thumbnail || fish.image ? (
             <div className="relative w-full h-40 mb-2 overflow-hidden rounded-md">
               <Image
                 src={selectedPreview ?? thumbnail ?? fish.image}
