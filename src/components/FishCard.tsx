@@ -373,12 +373,6 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
 
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={() => onClick?.(fish)}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") onClick?.(fish);
-      }}
       className="relative border border-panel-border rounded-lg overflow-hidden bg-gradient-to-b from-[#081525] to-[#021018] shadow-[--shadow-cockpit-border] cursor-pointer flex flex-col h-full"
       onMouseEnter={() => onHover?.(fish.id)}
       onMouseLeave={() => onHover?.(null)}
@@ -401,7 +395,15 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       </div>
 
       {/* Image */}
-      <div className="flex items-center justify-center p-3 bg-[linear-gradient(180deg,#012238,transparent)]">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onClick?.(fish)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") onClick?.(fish);
+        }}
+        className="flex items-center justify-center p-3 bg-[linear-gradient(180deg,#012238,transparent)]"
+      >
         {selectedPreview || thumbnail || fish.image ? (
           <div className="relative w-full h-40 rounded-md overflow-hidden border border-panel-border shadow-inner">
             <Image
