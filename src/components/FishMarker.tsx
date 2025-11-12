@@ -3,6 +3,7 @@
 import { Marker } from "react-map-gl/maplibre";
 import { Fish } from "@/types/fish";
 import { getRarityPulseClass } from "@/utils/rarity";
+import { useState } from "react";
 
 interface FishMarkerProps {
   fish: Fish;
@@ -18,6 +19,7 @@ export default function FishMarker({
   pinged = false,
 }: FishMarkerProps) {
   const pulseClass = getRarityPulseClass(fish.rarity);
+  const [imageError, setImageError] = useState(false);
 
   // Determine if this marker should be dimmed
   const isDimmed = isAnyHovered && !isHovered;
@@ -63,16 +65,40 @@ export default function FishMarker({
             isHovered ? "scale-150" : "scale-100"
           }`}
         />
-        {/* Tooltip - show on hover OR when hovered from list */}
+        {/* Tooltip with image - show on hover OR when hovered from list */}
         <div
-          className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-dark-navy border border-panel-border rounded text-xs whitespace-nowrap transition-opacity duration-200 pointer-events-none ${
+          className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-dark-navy border border-panel-border rounded shadow-lg transition-opacity duration-200 pointer-events-none ${
             showTooltip ? "opacity-100" : "opacity-0 group-hover:opacity-100"
           }`}
         >
-          <div className={`font-bold ${rarityColorClass.split(" ")[1]}`}>
-            {fish.name}
+          <div className="flex flex-col items-center p-2 gap-2 min-w-[120px]">
+            {/* Fish Image */}
+            <div className="w-20 h-20 rounded overflow-hidden bg-nautical-blue border border-panel-border flex items-center justify-center">
+              {!imageError && fish.image ? (
+                <img
+                  src={fish.image}
+                  alt={fish.name}
+                  className="w-full h-full object-cover"
+                  onError={() => setImageError(true)}
+                />
+              ) : (
+                <div className="text-4xl">🐠</div>
+              )}
+            </div>
+            {/* Fish Info */}
+            <div className="text-center">
+              <div
+                className={`font-bold text-sm ${
+                  rarityColorClass.split(" ")[1]
+                }`}
+              >
+                {fish.name}
+              </div>
+              <div className="text-text-secondary text-[10px] uppercase">
+                {fish.rarity}
+              </div>
+            </div>
           </div>
-          <div className="text-text-secondary text-[10px]">{fish.rarity}</div>
         </div>
       </div>
     </Marker>
