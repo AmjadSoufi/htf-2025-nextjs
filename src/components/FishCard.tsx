@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { Fish } from "@/types/fish";
 import { getRarityBadgeClass } from "@/utils/rarity";
@@ -11,9 +11,11 @@ interface FishCardProps {
 }
 
 export default function FishCard({ fish, onHover }: FishCardProps) {
+  const displayName = fish.name.startsWith("http") ? "Unknown Fish" : fish.name;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
+  const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
 
   useEffect(() => {
     // fetch latest sighting metadata (if exists)
@@ -37,6 +39,20 @@ export default function FishCard({ fish, onHover }: FishCardProps) {
     const f = e.target.files?.[0] ?? null;
     setSelectedFile(f);
   };
+
+  // create a temporary object URL for previewing selected files
+  useEffect(() => {
+    if (!selectedFile) {
+      setSelectedPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(selectedFile);
+    setSelectedPreview(url);
+    return () => {
+      URL.revokeObjectURL(url);
+      setSelectedPreview(null);
+    };
+  }, [selectedFile]);
 
   const markSeen = async () => {
     if (!selectedFile) return;
@@ -91,19 +107,17 @@ export default function FishCard({ fish, onHover }: FishCardProps) {
           >
             {fish.rarity}
           </div>
-        </div>
-        <div className="ml-3">
-          {thumbnail ? (
-            <img
-              src={thumbnail}
-              alt={`${fish.name} thumbnail`}
-              className="w-16 h-12 object-cover rounded"
-            />
-          ) : (
-            <div className="w-16 h-12 bg-panel-border rounded flex items-center justify-center text-[10px] text-text-secondary">
-              No Photo
+          {(selectedPreview || thumbnail || fish.image) ? (
+            <div className="relative w-full h-40 mb-2 overflow-hidden rounded-md">
+              <Image
+                src={selectedPreview ?? thumbnail ?? fish.image}
+                alt={displayName}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform duration-300"
+                unoptimized
+              />
             </div>
-          )}
+          ) : null}
         </div>
       </div>
       <div className="text-xs font-mono space-y-1">
