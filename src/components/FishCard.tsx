@@ -395,20 +395,27 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
 
   return (
     <div
-      className="relative border border-panel-border rounded-lg overflow-hidden bg-gradient-to-b from-[#081525] to-[#021018] shadow-[--shadow-cockpit-border] cursor-pointer flex flex-col h-full"
+      className="relative border-2 border-panel-border rounded-xl overflow-hidden bg-gradient-to-br from-[#0a1829] via-[#081525] to-[#021018] shadow-[0_0_20px_rgba(0,255,157,0.1)] hover:shadow-[0_0_30px_rgba(0,255,157,0.2)] transition-all duration-300 cursor-pointer flex flex-col h-full hover:scale-[1.02] hover:border-sonar-green/50"
       onMouseEnter={() => onHover?.(fish.id)}
       onMouseLeave={() => onHover?.(null)}
     >
       {/* Top strip: name + rarity */}
-      <div className="flex items-center justify-between px-3 py-2 bg-[rgba(0,0,0,0.25)] border-b border-panel-border">
-        <div>
-          <div className="text-sm font-bold text-sonar-green">{fish.name}</div>
-          <div className="text-xs text-text-secondary">
-            {species} • ID {fish.id.slice(0, 6)}
+      <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[rgba(0,255,157,0.05)] to-transparent border-b-2 border-panel-border">
+        <div className="flex-1">
+          <div className="text-base font-bold text-sonar-green flex items-center gap-2">
+            {fish.name}
+            {latestMeta && (
+              <span className="text-xs bg-sonar-green/20 border border-sonar-green/40 text-sonar-green px-2 py-0.5 rounded-full">
+                ✓ Seen
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-text-secondary italic mt-0.5">
+            {species} • #{fish.id.slice(0, 8)}
           </div>
         </div>
         <div
-          className={`px-2 py-1 text-xs font-bold rounded ${getRarityBadgeClass(
+          className={`px-3 py-1.5 text-xs font-bold rounded-full border-2 shadow-lg ${getRarityBadgeClass(
             fish.rarity
           )}`}
         >
@@ -424,10 +431,10 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") onClick?.(fish);
         }}
-        className="flex items-center justify-center p-3 bg-[linear-gradient(180deg,#012238,transparent)]"
+        className="relative flex items-center justify-center p-4 bg-gradient-to-b from-[#012238]/50 to-transparent"
       >
         {selectedPreview || thumbnail || fish.image ? (
-          <div className="relative w-full h-40 rounded-md overflow-hidden border border-panel-border shadow-inner">
+          <div className="relative w-full h-48 rounded-lg overflow-hidden border-2 border-panel-border shadow-[0_0_15px_rgba(0,0,0,0.5)] hover:border-sonar-green/40 transition-all">
             <Image
               src={selectedPreview ?? thumbnail ?? fish.image}
               alt={displayName}
@@ -435,61 +442,91 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
               className="object-cover"
               unoptimized
             />
+            {selectedPreview && (
+              <div className="absolute top-2 right-2 bg-sonar-green/90 text-black px-2 py-1 rounded-full text-xs font-bold">
+                Preview
+              </div>
+            )}
           </div>
         ) : (
-          <div className="w-full h-40 rounded-md bg-gradient-to-br from-[#022b3a] to-[#01202a] flex items-center justify-center text-text-secondary">
-            No image
+          <div className="w-full h-48 rounded-lg bg-gradient-to-br from-[#022b3a] to-[#01202a] flex items-center justify-center text-text-secondary border-2 border-dashed border-panel-border">
+            <div className="text-center">
+              <div className="text-4xl mb-2">🐟</div>
+              <div className="text-xs">No image available</div>
+            </div>
           </div>
         )}
       </div>
 
       {/* Details */}
-      <div className="px-3 py-2 flex-1">
-        <div className="text-xs text-text-secondary mb-2">{description}</div>
+      <div className="px-4 py-3 flex-1 space-y-3">
+        <div className="text-xs text-text-secondary leading-relaxed line-clamp-2">
+          {description}
+        </div>
 
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <div className="text-[11px] text-text-secondary mb-1">
-              SIZE / WEIGHT
+        <div className="grid grid-cols-2 gap-3">
+          <div className="bg-panel-bg/30 border border-panel-border rounded-lg p-2">
+            <div className="text-[10px] text-text-secondary mb-1 uppercase tracking-wider">
+              Size / Weight
             </div>
-            <div className="text-sm font-bold text-sonar-green">
-              {sizeCm} cm • {weightKg} kg
+            <div className="text-sm font-bold text-white">{sizeCm} cm</div>
+            <div className="text-xs text-sonar-green font-semibold">
+              {weightKg} kg
             </div>
           </div>
-          <div className="w-36">
-            <div className="text-[11px] text-text-secondary mb-1">HABITAT</div>
-            <div className="text-sm font-bold">{habitat}</div>
+          <div className="bg-panel-bg/30 border border-panel-border rounded-lg p-2">
+            <div className="text-[10px] text-text-secondary mb-1 uppercase tracking-wider">
+              Habitat
+            </div>
+            <div className="text-sm font-bold text-white">{habitat}</div>
+            <div className="text-xs text-text-secondary">Status: {status}</div>
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-[11px] text-text-secondary">SPEED</div>
-            <div className="h-3 bg-panel-border rounded overflow-hidden mt-1">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[10px] text-text-secondary uppercase tracking-wider">
+                Speed
+              </div>
+              <div className="text-xs font-bold text-sonar-green">
+                {dynSpeed}
+              </div>
+            </div>
+            <div className="h-2 bg-panel-bg border border-panel-border rounded-full overflow-hidden">
               <div
                 style={{ width: `${Math.max(5, Math.min(100, dynSpeed))}%` }}
-                className="h-full bg-sonar-green"
+                className="h-full bg-gradient-to-r from-cyan-500 to-blue-400 transition-all duration-300"
               />
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-text-secondary">AGILITY</div>
-            <div className="h-3 bg-panel-border rounded overflow-hidden mt-1">
+            <div className="flex items-center justify-between mb-1">
+              <div className="text-[10px] text-text-secondary uppercase tracking-wider">
+                Agility
+              </div>
+              <div className="text-xs font-bold text-warning-amber">
+                {dynAgility}
+              </div>
+            </div>
+            <div className="h-2 bg-panel-bg border border-panel-border rounded-full overflow-hidden">
               <div
                 style={{ width: `${Math.max(5, Math.min(100, dynAgility))}%` }}
-                className="h-full bg-warning-amber"
+                className="h-full bg-gradient-to-r from-amber-500 to-orange-400 transition-all duration-300"
               />
             </div>
           </div>
         </div>
 
-        <div className="mt-3">
-          <div className="text-[11px] text-text-secondary mb-1">ABILITIES</div>
-          <div className="flex flex-wrap gap-2">
+        <div className="bg-panel-bg/20 border border-panel-border rounded-lg p-2">
+          <div className="text-[10px] text-text-secondary mb-1.5 uppercase tracking-wider">
+            Abilities
+          </div>
+          <div className="flex flex-wrap gap-1.5">
             {abilities.map((a, idx) => (
               <div
                 key={idx}
-                className="px-2 py-0.5 text-xs bg-[rgba(255,255,255,0.03)] border border-panel-border rounded"
+                className="px-2 py-1 text-xs bg-sonar-green/10 border border-sonar-green/30 text-sonar-green rounded-md font-medium"
               >
                 {a}
               </div>
@@ -497,84 +534,99 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
           </div>
         </div>
 
-        <div className="mt-3 flex items-center justify-between">
-          <div className="text-xs text-text-secondary">
-            Last seen:{" "}
-            <span className="text-warning-amber">
-              {formatDistanceToNow(new Date(fish.latestSighting.timestamp), {
-                addSuffix: true,
-              })}
-            </span>
-            {fish.latestSighting?.temperature != null && (
-              <span className="ml-2 text-text-secondary flex items-center gap-2">
-                <span>
-                  • Water:{" "}
-                  <span className="font-bold text-sonar-green">
-                    {Number(fish.latestSighting.temperature).toFixed(1)}°C
-                  </span>
+        <div className="bg-gradient-to-r from-panel-bg/40 to-transparent border-l-2 border-sonar-green/50 pl-3 pr-2 py-2 rounded">
+          <div className="text-[10px] text-text-secondary mb-1 uppercase tracking-wider">
+            Last Sighting
+          </div>
+          <div className="text-xs text-warning-amber font-semibold">
+            {formatDistanceToNow(new Date(fish.latestSighting.timestamp), {
+              addSuffix: true,
+            })}
+          </div>
+          {fish.latestSighting?.temperature != null && (
+            <div className="mt-2 flex items-center flex-wrap gap-2">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-text-secondary">Water:</span>
+                <span className="text-xs font-bold text-sonar-green">
+                  {Number(fish.latestSighting.temperature).toFixed(1)}°C
                 </span>
-                {typeof fish.preferredTemperatureMin === "number" &&
-                  typeof fish.preferredTemperatureMax === "number" && (
-                    <span className="ml-1 text-xs text-text-secondary">
-                      (pref {fish.preferredTemperatureMin}–
-                      {fish.preferredTemperatureMax}°C)
-                    </span>
-                  )}
-                {fish.latestSighting?.isTemperatureInPreferredRange != null && (
-                  <span
-                    className={`ml-2 inline-block w-2 h-2 rounded-full ${
-                      fish.latestSighting.isTemperatureInPreferredRange
-                        ? "bg-sonar-green"
-                        : "bg-red-500"
-                    }`}
-                    title={
-                      fish.latestSighting.isTemperatureInPreferredRange
-                        ? "Within preferred range"
-                        : "Outside preferred range"
-                    }
-                  />
+              </div>
+              {typeof fish.preferredTemperatureMin === "number" &&
+                typeof fish.preferredTemperatureMax === "number" && (
+                  <span className="text-[10px] text-text-secondary">
+                    (pref {fish.preferredTemperatureMin}–
+                    {fish.preferredTemperatureMax}°C)
+                  </span>
                 )}
-                {/* Sparkline */}
-                <div className="ml-2">
-                  {tempLoading ? (
-                    <div className="w-28 h-6 bg-panel-border rounded-sm" />
-                  ) : tempPoints && tempPoints.length > 0 ? (
-                    <TemperatureSparkline
-                      points={tempPoints}
-                      latest={fish.latestSighting.temperature}
-                    />
-                  ) : (
-                    <div className="text-[11px] text-text-secondary">
-                      No recent temps
-                    </div>
-                  )}
-                </div>
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-text-secondary">
-            Status: <span className="font-bold text-sonar-green">{status}</span>
-          </div>
+              {fish.latestSighting?.isTemperatureInPreferredRange != null && (
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ${
+                    fish.latestSighting.isTemperatureInPreferredRange
+                      ? "bg-sonar-green shadow-[0_0_4px_rgba(0,255,157,0.8)]"
+                      : "bg-red-500 shadow-[0_0_4px_rgba(239,68,68,0.8)]"
+                  }`}
+                  title={
+                    fish.latestSighting.isTemperatureInPreferredRange
+                      ? "Within preferred range"
+                      : "Outside preferred range"
+                  }
+                />
+              )}
+              {/* Sparkline */}
+              <div className="ml-auto">
+                {tempLoading ? (
+                  <div className="w-24 h-6 bg-panel-border/30 rounded-sm animate-pulse" />
+                ) : tempPoints && tempPoints.length > 0 ? (
+                  <TemperatureSparkline
+                    points={tempPoints}
+                    latest={fish.latestSighting.temperature}
+                  />
+                ) : null}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Footer actions */}
-      <div className="px-3 py-2 border-t border-panel-border bg-[rgba(0,0,0,0.12)] flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <input
-            type="file"
-            accept="image/png, image/jpeg, image/webp"
-            onChange={onFileChange}
-            className="text-xs"
-          />
+      <div className="px-4 py-3 border-t-2 border-panel-border bg-gradient-to-r from-[rgba(0,0,0,0.3)] to-[rgba(0,0,0,0.2)] flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <label className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="file"
+              accept="image/png, image/jpeg, image/webp"
+              onChange={onFileChange}
+              className="hidden"
+            />
+            <div className="flex items-center gap-2 text-xs text-text-secondary group-hover:text-sonar-green transition-colors border border-panel-border group-hover:border-sonar-green/50 rounded-lg px-3 py-1.5 bg-panel-bg/30">
+              <span>📷</span>
+              <span className="hidden sm:inline">
+                {selectedFile ? selectedFile.name : "Add photo"}
+              </span>
+              <span className="sm:hidden">Photo</span>
+            </div>
+          </label>
         </div>
         <div>
           <button
             disabled={uploading}
             onClick={markSeenOrUndo}
-            className="px-3 py-1 text-xs rounded bg-sonar-green text-black disabled:opacity-50"
+            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+              latestMeta
+                ? "bg-red-600/20 text-red-400 border-2 border-red-600/50 hover:bg-red-600/30"
+                : "bg-sonar-green text-black border-2 border-sonar-green hover:bg-sonar-green/90 shadow-[0_0_10px_rgba(0,255,157,0.3)]"
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            {uploading ? "Uploading..." : latestMeta ? "Undo" : "Mark as seen"}
+            {uploading ? (
+              <span className="flex items-center gap-2">
+                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Uploading...
+              </span>
+            ) : latestMeta ? (
+              "✕ Undo"
+            ) : (
+              "✓ Mark as seen"
+            )}
           </button>
         </div>
       </div>
