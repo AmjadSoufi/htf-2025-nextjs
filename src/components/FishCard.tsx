@@ -5,6 +5,65 @@ import { Fish } from "@/types/fish";
 import { getRarityBadgeClass } from "@/utils/rarity";
 import { useEffect, useState, useMemo } from "react";
 
+interface SparkPoint {
+  t: string;
+  temperature: number;
+}
+
+function TemperatureSparkline({
+  points,
+  latest,
+}: {
+  points: SparkPoint[];
+  latest?: number | null;
+}) {
+  const w = 96;
+  const h = 24;
+  if (!points || points.length === 0) {
+    return null;
+  }
+
+  const temps = points.map((p) => p.temperature);
+  const min = Math.min(...temps);
+  const max = Math.max(...temps);
+  const range = max - min || 1;
+
+  const coords = points.map((p, i) => {
+    const x = points.length === 1 ? w / 2 : (i / (points.length - 1)) * w;
+    const y = h - ((p.temperature - min) / range) * h;
+    return { x, y };
+  });
+
+  const d = coords
+    .map((c, i) => `${i === 0 ? "M" : "L"} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`)
+    .join(" ");
+
+  const first = temps[0];
+  const last = temps[temps.length - 1];
+  const trend = last - first;
+
+  return (
+    <div className="inline-flex items-center">
+      <svg width={w} height={h} className="block">
+        <path
+          d={d}
+          fill="none"
+          stroke="#60f2a1"
+          strokeWidth={1.5}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle
+          cx={coords[coords.length - 1].x}
+          cy={coords[coords.length - 1].y}
+          r={2}
+          fill={trend >= 0 ? "#34D399" : "#f87171"}
+        />
+      </svg>
+    </div>
+  );
+}
+
 interface FishCardProps {
   fish: Fish;
   onHover?: (fishId: string | null) => void;
@@ -128,10 +187,101 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
   }, [fish.id, fish.weightKg, sizeCm]);
 
   // dynamic SPEED and AGILITY that update every 5s
-  const initialSpeed = fish.speed ?? Math.round(20 + Math.random() * 60);
-  const initialAgility = fish.agility ?? Math.round(20 + Math.random() * 60);
+  // Prefer provided stats; otherwise derive deterministic stable defaults from id
+  const initialSpeed =
+    fish.speed ?? deterministicInt(fish.id + "-base-speed", 20, 80);
+  const initialAgility =
+    fish.agility ?? deterministicInt(fish.id + "-base-agility", 20, 80);
   const [dynSpeed, setDynSpeed] = useState<number>(initialSpeed);
   const [dynAgility, setDynAgility] = useState<number>(initialAgility);
+
+  // Temperature sparkline state
+  const [tempPoints, setTempPoints] = useState<
+    Array<{ t: string; temperature: number }>
+  >([]);
+  const [tempLoading, setTempLoading] = useState(false);
+
+  // Haversine distance (meters)
+  const haversine = (
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+  ) => {
+    const toRad = (v: number) => (v * Math.PI) / 180;
+    const R = 6371000; // meters
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRad(lat1)) *
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  useEffect(() => {
+    // Fetch recent temperature readings near the fish's latest sighting
+    if (!fish.latestSighting || !fish.latestSighting.latitude) return;
+
+    let cancelled = false;
+    const fetchTemps = async () => {
+      setTempLoading(true);
+      try {
+        const end = new Date();
+        const start = new Date(end.getTime() - 6 * 60 * 60 * 1000); // last 6 hours
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL ||
+          process.env.API_URL ||
+          "http://localhost:5555";
+        const url = `${baseUrl.replace(
+          /\/$/,
+          ""
+        )}/api/temperatures/history?start=${encodeURIComponent(
+          start.toISOString()
+        )}&end=${encodeURIComponent(end.toISOString())}`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          setTempPoints([]);
+          return;
+        }
+        const data: Array<any> = await res.json();
+
+        // Filter readings by proximity (within 2km)
+        const nearby = data
+          .filter((r) => {
+            const d = haversine(
+              fish.latestSighting.latitude,
+              fish.latestSighting.longitude,
+              r.latitude,
+              r.longitude
+            );
+            return d <= 2000;
+          })
+          .sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+          )
+          .map((r) => ({ t: r.timestamp, temperature: Number(r.temperature) }));
+
+        if (!cancelled) {
+          // keep at most 40 points
+          setTempPoints(nearby.slice(-40));
+        }
+      } catch (e) {
+        // ignore
+      } finally {
+        if (!cancelled) setTempLoading(false);
+      }
+    };
+
+    fetchTemps();
+    return () => {
+      cancelled = true;
+    };
+  }, [fish.latestSighting]);
 
   useEffect(() => {
     // reset when fish changes
@@ -273,6 +423,52 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
                 addSuffix: true,
               })}
             </span>
+            {fish.latestSighting?.temperature != null && (
+              <span className="ml-2 text-text-secondary flex items-center gap-2">
+                <span>
+                  • Water:{" "}
+                  <span className="font-bold text-sonar-green">
+                    {Number(fish.latestSighting.temperature).toFixed(1)}°C
+                  </span>
+                </span>
+                {typeof fish.preferredTemperatureMin === "number" &&
+                  typeof fish.preferredTemperatureMax === "number" && (
+                    <span className="ml-1 text-xs text-text-secondary">
+                      (pref {fish.preferredTemperatureMin}–
+                      {fish.preferredTemperatureMax}°C)
+                    </span>
+                  )}
+                {fish.latestSighting?.isTemperatureInPreferredRange != null && (
+                  <span
+                    className={`ml-2 inline-block w-2 h-2 rounded-full ${
+                      fish.latestSighting.isTemperatureInPreferredRange
+                        ? "bg-sonar-green"
+                        : "bg-red-500"
+                    }`}
+                    title={
+                      fish.latestSighting.isTemperatureInPreferredRange
+                        ? "Within preferred range"
+                        : "Outside preferred range"
+                    }
+                  />
+                )}
+                {/* Sparkline */}
+                <div className="ml-2">
+                  {tempLoading ? (
+                    <div className="w-28 h-6 bg-panel-border rounded-sm" />
+                  ) : tempPoints && tempPoints.length > 0 ? (
+                    <TemperatureSparkline
+                      points={tempPoints}
+                      latest={fish.latestSighting.temperature}
+                    />
+                  ) : (
+                    <div className="text-[11px] text-text-secondary">
+                      No recent temps
+                    </div>
+                  )}
+                </div>
+              </span>
+            )}
           </div>
           <div className="text-xs text-text-secondary">
             Status: <span className="font-bold text-sonar-green">{status}</span>
