@@ -307,22 +307,26 @@ export default function FishDetailModal({
 
             {/* Historical Data Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="h-64 bg-panel-bg border border-panel-border rounded-lg p-2">
+              <div className="bg-panel-bg border border-panel-border rounded-lg p-2 overflow-hidden">
                 <h3 className="text-sonar-green font-bold mb-1.5 text-xs uppercase tracking-wider">
                   Sighting Locations
                 </h3>
-                <HistoricalSightingsMap
-                  fish={fish}
-                  sightings={historical?.sightings ?? null}
-                />
+                <div className="h-56 rounded overflow-hidden">
+                  <HistoricalSightingsMap
+                    fish={fish}
+                    sightings={historical?.sightings ?? null}
+                  />
+                </div>
               </div>
-              <div className="h-64 bg-panel-bg border border-panel-border rounded-lg p-2 flex flex-col">
+              <div className="bg-panel-bg border border-panel-border rounded-lg p-2 flex flex-col overflow-hidden">
                 <h3 className="text-sonar-green font-bold mb-1.5 text-xs uppercase tracking-wider">
                   Movement History
                 </h3>
-                <HistoricalDataChart
-                  sightings={historical?.sightings ?? null}
-                />
+                <div className="flex-1 min-h-0">
+                  <HistoricalDataChart
+                    sightings={historical?.sightings ?? null}
+                  />
+                </div>
               </div>
             </div>
 
