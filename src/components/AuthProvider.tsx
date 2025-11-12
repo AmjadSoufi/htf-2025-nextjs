@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "@/lib/auth-client";
 import { redirect } from "next/navigation";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
   return <>{children}</>;
@@ -10,6 +10,42 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
 export function UserInfo() {
   const { data: session, isPending } = useSession();
+
+  const [progress, setProgress] = useState<{ xp: number; rank: string } | null>(
+    null
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchProgress = async () => {
+      if (!session) return;
+      try {
+        const res = await fetch(`/api/user/progress`);
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled) setProgress(json?.data ?? null);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    fetchProgress();
+
+    const handler = () => {
+      fetchProgress();
+    };
+    // listen for global events triggered by actions that should refresh progress
+    if (typeof window !== "undefined") {
+      window.addEventListener("user:progress:updated", handler);
+    }
+
+    return () => {
+      cancelled = true;
+      if (typeof window !== "undefined") {
+        window.removeEventListener("user:progress:updated", handler);
+      }
+    };
+  }, [session]);
 
   if (isPending) {
     return <div className="text-text-secondary">Loading...</div>;
@@ -34,6 +70,14 @@ export function UserInfo() {
       <div className="text-text-primary">
         <p className="font-medium">{session.user.name}</p>
         <p className="text-sm text-text-secondary">{session.user.email}</p>
+        {progress ? (
+          <p className="text-sm text-text-secondary mt-1">
+            XP: <span className="font-medium text-sonar-green">{progress.xp}</span>{" "}
+            • Rank: <span className="font-medium">{progress.rank}</span>
+          </p>
+        ) : (
+          <p className="text-sm text-text-secondary mt-1">XP: — • Rank: —</p>
+        )}
       </div>
       <button
         onClick={handleSignOut}

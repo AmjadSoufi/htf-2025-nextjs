@@ -138,7 +138,9 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       setUploading(true);
       try {
         const res = await fetch(
-          `/api/sightings?fishId=${encodeURIComponent(fish.id)}`,
+          `/api/sightings?fishId=${encodeURIComponent(fish.id)}&rarity=${encodeURIComponent(
+            fish.rarity ?? "COMMON"
+          )}`,
           {
             method: "DELETE",
           }
@@ -146,6 +148,12 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         if (res.ok) {
           setLatestMeta(null);
           setThumbnail(null);
+          // notify UI to refresh user progress (XP/rank)
+          try {
+            window.dispatchEvent(new CustomEvent("user:progress:updated"));
+          } catch (e) {
+            /* ignore in non-browser env */
+          }
         } else {
           console.error("Undo failed", await res.text());
         }
@@ -169,6 +177,7 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
             latitude: fish.latestSighting.latitude,
             longitude: fish.latestSighting.longitude,
             timestamp: fish.latestSighting.timestamp,
+            rarity: fish.rarity,
             imageData: dataUrl,
           };
 
@@ -182,6 +191,12 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
             setLatestMeta(json.metadata);
             setThumbnail(json.metadata.imageUrl ?? null);
             setSelectedFile(null);
+            // notify UI to refresh user progress (XP/rank)
+            try {
+              window.dispatchEvent(new CustomEvent("user:progress:updated"));
+            } catch (e) {
+              /* ignore in non-browser env */
+            }
           } else {
             console.error("Upload failed", await res.text());
           }
@@ -194,6 +209,7 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
           latitude: fish.latestSighting.latitude,
           longitude: fish.latestSighting.longitude,
           timestamp: fish.latestSighting.timestamp,
+          rarity: fish.rarity,
         };
         const res = await fetch(`/api/sightings`, {
           method: "POST",
@@ -204,6 +220,12 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
           const json = await res.json();
           setLatestMeta(json.metadata);
           setThumbnail(json.metadata.imageUrl ?? null);
+          // notify UI to refresh user progress (XP/rank)
+          try {
+            window.dispatchEvent(new CustomEvent("user:progress:updated"));
+          } catch (e) {
+            /* ignore in non-browser env */
+          }
         } else {
           console.error("Mark seen failed", await res.text());
         }

@@ -53,3 +53,13 @@ export const verification = sqliteTable("verification", {
   createdAt: integer("createdAt", { mode: "timestamp" }),
   updatedAt: integer("updatedAt", { mode: "timestamp" }),
 });
+
+// Per-user progress (XP + rank). Kept separate to avoid altering the main user table.
+export const userProgress = sqliteTable("user_progress", {
+  userId: text("userId")
+    .primaryKey()
+    .references(() => user.id, { onDelete: "cascade" }),
+  xp: integer("xp").notNull(),
+  rank: text("rank").notNull(),
+  updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
