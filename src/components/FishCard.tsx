@@ -83,6 +83,8 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
   const [uploading, setUploading] = useState(false);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
+  // latest sighting metadata fetched from /api/sightings (null when none)
+  const [latestMeta, setLatestMeta] = useState<any | null>(null);
 
   useEffect(() => {
     // fetch latest sighting metadata (if exists)
@@ -93,7 +95,16 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         );
         if (res.ok) {
           const data = await res.json();
-          if (data?.data?.imageUrl) setThumbnail(data.data.imageUrl);
+          if (data?.data) {
+            setLatestMeta(data.data);
+            setThumbnail(data.data.imageUrl ?? null);
+          } else {
+            setLatestMeta(null);
+            setThumbnail(null);
+          }
+        } else {
+          setLatestMeta(null);
+          setThumbnail(null);
         }
       } catch (e) {
         // ignore
@@ -121,21 +132,69 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
     };
   }, [selectedFile]);
 
-  const markSeen = async () => {
-    if (!selectedFile) return;
+  const markSeenOrUndo = async () => {
+    // If already have a latestMeta then this should act as an UNDO
+    if (latestMeta) {
+      setUploading(true);
+      try {
+        const res = await fetch(
+          `/api/sightings?fishId=${encodeURIComponent(fish.id)}`,
+          {
+            method: "DELETE",
+          }
+        );
+        if (res.ok) {
+          setLatestMeta(null);
+          setThumbnail(null);
+        } else {
+          console.error("Undo failed", await res.text());
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setUploading(false);
+      }
+      return;
+    }
+
+    // Otherwise mark as seen. If a file is selected, upload it; otherwise mark seen without image
     setUploading(true);
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const dataUrl = reader.result as string;
+      if (selectedFile) {
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const dataUrl = reader.result as string;
+          const payload = {
+            fishId: fish.id,
+            latitude: fish.latestSighting.latitude,
+            longitude: fish.latestSighting.longitude,
+            timestamp: fish.latestSighting.timestamp,
+            imageData: dataUrl,
+          };
+
+          const res = await fetch(`/api/sightings`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            const json = await res.json();
+            setLatestMeta(json.metadata);
+            setThumbnail(json.metadata.imageUrl ?? null);
+            setSelectedFile(null);
+          } else {
+            console.error("Upload failed", await res.text());
+          }
+        };
+        reader.readAsDataURL(selectedFile);
+      } else {
+        // No file selected — mark seen without an image
         const payload = {
           fishId: fish.id,
           latitude: fish.latestSighting.latitude,
           longitude: fish.latestSighting.longitude,
           timestamp: fish.latestSighting.timestamp,
-          imageData: dataUrl,
         };
-
         const res = await fetch(`/api/sightings`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -143,13 +202,12 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         });
         if (res.ok) {
           const json = await res.json();
-          setThumbnail(json.metadata.imageUrl);
-          setSelectedFile(null);
+          setLatestMeta(json.metadata);
+          setThumbnail(json.metadata.imageUrl ?? null);
         } else {
-          console.error("Upload failed", await res.text());
+          console.error("Mark seen failed", await res.text());
         }
-      };
-      reader.readAsDataURL(selectedFile);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -488,11 +546,11 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         </div>
         <div>
           <button
-            disabled={!selectedFile || uploading}
-            onClick={markSeen}
+            disabled={uploading}
+            onClick={markSeenOrUndo}
             className="px-3 py-1 text-xs rounded bg-sonar-green text-black disabled:opacity-50"
           >
-            {uploading ? "Uploading..." : "Mark as seen"}
+            {uploading ? "Uploading..." : latestMeta ? "Undo" : "Mark as seen"}
           </button>
         </div>
       </div>
