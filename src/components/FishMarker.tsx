@@ -31,8 +31,8 @@ export default function FishMarker({
     rarity === "RARE"
       ? "bg-warning-amber text-warning-amber"
       : rarity === "EPIC"
-        ? "bg-danger-red text-danger-red"
-        : "bg-sonar-green text-sonar-green";
+      ? "bg-danger-red text-danger-red"
+      : "bg-sonar-green text-sonar-green";
 
   return (
     <Marker
@@ -40,12 +40,16 @@ export default function FishMarker({
       latitude={fish.latestSighting.latitude}
     >
       <div
-        className={`relative group cursor-pointer hover:z-[9999] transition-opacity duration-200 ${isDimmed ? "opacity-20" : "opacity-100"} ${isHovered ? "z-[9999]" : "z-auto"}`}
+        className={`relative group cursor-pointer hover:z-[9999] transition-opacity duration-200 ${
+          isDimmed ? "opacity-20" : "opacity-100"
+        } ${isHovered ? "z-[9999]" : "z-auto"}`}
         title={fish.name}
       >
         {/* Pulsing ring effect - only animate if not dimmed */}
         <div
-          className={`absolute -inset-[6px] w-5 h-5 rounded-full opacity-75 ${rarityColorClass.split(" ")[0]} ${isDimmed ? "" : pulseClass}`}
+          className={`absolute -inset-[6px] w-5 h-5 rounded-full opacity-75 ${
+            rarityColorClass.split(" ")[0]
+          } ${isDimmed ? "" : pulseClass}`}
         />
         {/* Radar ping effect */}
         {pinged && (
@@ -53,7 +57,11 @@ export default function FishMarker({
         )}
         {/* Fish marker */}
         <div
-          className={`w-2 h-2 rounded-full border-2 border-deep-ocean transition-all duration-300 group-hover:w-3 group-hover:h-3 shadow-[--shadow-marker] ${rarityColorClass.split(" ")[0]} ${rarityColorClass.split(" ")[1]} ${isHovered ? "scale-150" : "scale-100"}`}
+          className={`w-2 h-2 rounded-full border-2 border-deep-ocean transition-all duration-300 group-hover:w-3 group-hover:h-3 shadow-[--shadow-marker] ${
+            rarityColorClass.split(" ")[0]
+          } ${rarityColorClass.split(" ")[1]} ${
+            isHovered ? "scale-150" : "scale-100"
+          }`}
         />
         {/* Tooltip - show on hover OR when hovered from list */}
         <div
