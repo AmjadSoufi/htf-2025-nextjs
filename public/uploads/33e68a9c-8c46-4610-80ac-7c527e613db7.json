@@ -1,0 +1,22 @@
+{
+  "id": "9755d7aa-2373-4268-8576-a08e06305d7d",
+  "fishId": "33e68a9c-8c46-4610-80ac-7c527e613db7",
+  "imageUrl": "/uploads/1762958165567-2e768b69-25c1-4f25-9454-1f7e09934173.webp",
+  "latitude": 10.09064205848514,
+  "longitude": 99.80191724813633,
+  "timestamp": "2025-11-12T14:34:55.308Z",
+  "createdAt": "2025-11-12T14:36:05.569Z",
+  "verification": {
+    "isVerified": false,
+    "confidence": 0.592977075110729,
+    "detectedSpecies": "https://upload.wikimedia.org/wikipedia/commons/a/a4/White_eyed_moray_eel.jpg",
+    "matchScore": 0.592977075110729,
+    "reasons": [
+      "Moderate confidence - manual review recommended",
+      "Some fish features detected",
+      "Species characteristics partially match",
+      "Good image quality"
+    ],
+    "timestamp": "2025-11-12T14:35:51.781Z"
+  }
+}

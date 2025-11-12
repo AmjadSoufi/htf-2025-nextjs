@@ -4,6 +4,8 @@ import { formatDistanceToNow } from "date-fns";
 import { Fish } from "@/types/fish";
 import { getRarityBadgeClass } from "@/utils/rarity";
 import { useEffect, useState, useMemo } from "react";
+import VerificationBadge, { ConfidenceMeter } from "./VerificationBadge";
+import VerificationConfirmModal from "./VerificationConfirmModal";
 
 interface SparkPoint {
   t: string;
@@ -81,10 +83,18 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
   const displayName = fish.name.startsWith("http") ? "Unknown Fish" : fish.name;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [thumbnail, setThumbnail] = useState<string | null>(null);
   const [selectedPreview, setSelectedPreview] = useState<string | null>(null);
   // latest sighting metadata fetched from /api/sightings (null when none)
   const [latestMeta, setLatestMeta] = useState<any | null>(null);
+  const [verificationResult, setVerificationResult] = useState<any | null>(
+    null
+  );
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingVerification, setPendingVerification] = useState<any | null>(
+    null
+  );
 
   useEffect(() => {
     // fetch latest sighting metadata (if exists)
@@ -148,6 +158,7 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
         if (res.ok) {
           setLatestMeta(null);
           setThumbnail(null);
+          setVerificationResult(null);
           // notify UI to refresh user progress (XP/rank)
           try {
             window.dispatchEvent(new CustomEvent("user:progress:updated"));
@@ -165,76 +176,160 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       return;
     }
 
-    // Otherwise mark as seen. If a file is selected, upload it; otherwise mark seen without image
+    // Otherwise mark as seen. If a file is selected, upload it with AI verification
     setUploading(true);
     try {
       if (selectedFile) {
         const reader = new FileReader();
         reader.onload = async () => {
           const dataUrl = reader.result as string;
-          const payload = {
-            fishId: fish.id,
-            latitude: fish.latestSighting.latitude,
-            longitude: fish.latestSighting.longitude,
-            timestamp: fish.latestSighting.timestamp,
-            rarity: fish.rarity,
-            imageData: dataUrl,
-          };
 
-          const res = await fetch(`/api/sightings`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (res.ok) {
-            const json = await res.json();
-            setLatestMeta(json.metadata);
-            setThumbnail(json.metadata.imageUrl ?? null);
-            setSelectedFile(null);
-            // notify UI to refresh user progress (XP/rank)
-            try {
-              window.dispatchEvent(new CustomEvent("user:progress:updated"));
-            } catch (e) {
-              /* ignore in non-browser env */
+          // Step 1: Verify image with AI
+          setVerifying(true);
+          let verification = null;
+          try {
+            const verifyRes = await fetch("/api/verify-fish", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                imageData: dataUrl,
+                fishName: fish.name,
+                fishSpecies: fish.species,
+              }),
+            });
+
+            if (verifyRes.ok) {
+              const verifyData = await verifyRes.json();
+              verification = verifyData.verification;
+              setVerificationResult(verification);
             }
-          } else {
-            console.error("Upload failed", await res.text());
+          } catch (err) {
+            console.error("Verification failed:", err);
+          } finally {
+            setVerifying(false);
           }
+
+          // Step 2: Only proceed if verification passed or user confirms
+          if (verification && !verification.isVerified) {
+            // Show custom styled confirmation modal
+            setPendingVerification(verification);
+            setShowConfirmModal(true);
+            setUploading(false); // Stop uploading state while waiting for user
+            return; // Exit and wait for user decision
+          }
+
+          // Step 3: Submit sighting with verification data
+          await submitSighting(dataUrl, verification);
         };
         reader.readAsDataURL(selectedFile);
       } else {
         // No file selected — mark seen without an image
-        const payload = {
-          fishId: fish.id,
-          latitude: fish.latestSighting.latitude,
-          longitude: fish.latestSighting.longitude,
-          timestamp: fish.latestSighting.timestamp,
-          rarity: fish.rarity,
-        };
-        const res = await fetch(`/api/sightings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (res.ok) {
-          const json = await res.json();
-          setLatestMeta(json.metadata);
-          setThumbnail(json.metadata.imageUrl ?? null);
-          // notify UI to refresh user progress (XP/rank)
-          try {
-            window.dispatchEvent(new CustomEvent("user:progress:updated"));
-          } catch (e) {
-            /* ignore in non-browser env */
-          }
-        } else {
-          console.error("Mark seen failed", await res.text());
-        }
+        await submitSightingWithoutImage();
       }
     } catch (err) {
       console.error(err);
     } finally {
       setUploading(false);
     }
+  };
+
+  // Helper function to submit sighting with image
+  const submitSighting = async (dataUrl: string, verification: any) => {
+    try {
+      const payload = {
+        fishId: fish.id,
+        latitude: fish.latestSighting.latitude,
+        longitude: fish.latestSighting.longitude,
+        timestamp: fish.latestSighting.timestamp,
+        rarity: fish.rarity,
+        imageData: dataUrl,
+        verification, // Include AI verification result
+      };
+
+      const res = await fetch(`/api/sightings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setLatestMeta(json.metadata);
+        setThumbnail(json.metadata.imageUrl ?? null);
+        setSelectedFile(null);
+        setVerificationResult(null);
+        // notify UI to refresh user progress (XP/rank)
+        try {
+          window.dispatchEvent(new CustomEvent("user:progress:updated"));
+        } catch (e) {
+          /* ignore in non-browser env */
+        }
+      } else {
+        console.error("Upload failed", await res.text());
+      }
+    } catch (err) {
+      console.error("Submit sighting error:", err);
+    }
+  };
+
+  // Helper function to submit sighting without image
+  const submitSightingWithoutImage = async () => {
+    try {
+      const payload = {
+        fishId: fish.id,
+        latitude: fish.latestSighting.latitude,
+        longitude: fish.latestSighting.longitude,
+        timestamp: fish.latestSighting.timestamp,
+        rarity: fish.rarity,
+      };
+      const res = await fetch(`/api/sightings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setLatestMeta(json.metadata);
+        setThumbnail(json.metadata.imageUrl ?? null);
+        // notify UI to refresh user progress (XP/rank)
+        try {
+          window.dispatchEvent(new CustomEvent("user:progress:updated"));
+        } catch (e) {
+          /* ignore in non-browser env */
+        }
+      } else {
+        console.error("Mark seen failed", await res.text());
+      }
+    } catch (err) {
+      console.error("Submit without image error:", err);
+    }
+  };
+
+  // Handle modal confirmation
+  const handleConfirmSubmit = async () => {
+    setShowConfirmModal(false);
+    setUploading(true);
+
+    // Re-read the file and submit
+    if (selectedFile && pendingVerification) {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const dataUrl = reader.result as string;
+        await submitSighting(dataUrl, pendingVerification);
+        setPendingVerification(null);
+        setUploading(false);
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setUploading(false);
+    }
+  };
+
+  // Handle modal cancellation
+  const handleCancelSubmit = () => {
+    setShowConfirmModal(false);
+    setPendingVerification(null);
+    setVerificationResult(null);
+    // Keep the file selected so user can try again or choose different photo
   };
 
   // Provide fallbacks for missing metadata to make the card interesting
@@ -402,12 +497,18 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       {/* Top strip: name + rarity */}
       <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-[rgba(0,255,157,0.05)] to-transparent border-b-2 border-panel-border">
         <div className="flex-1">
-          <div className="text-base font-bold text-sonar-green flex items-center gap-2">
+          <div className="text-base font-bold text-sonar-green flex items-center gap-2 flex-wrap">
             {fish.name}
             {latestMeta && (
               <span className="text-xs bg-sonar-green/20 border border-sonar-green/40 text-sonar-green px-2 py-0.5 rounded-full">
                 ✓ Seen
               </span>
+            )}
+            {latestMeta?.verification && (
+              <VerificationBadge
+                verification={latestMeta.verification}
+                size="sm"
+              />
             )}
           </div>
           <div className="text-xs text-text-secondary italic mt-0.5">
@@ -589,47 +690,89 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       </div>
 
       {/* Footer actions */}
-      <div className="px-4 py-3 border-t-2 border-panel-border bg-gradient-to-r from-[rgba(0,0,0,0.3)] to-[rgba(0,0,0,0.2)] flex items-center justify-between gap-3">
-        <div className="flex-1">
-          <label className="flex items-center gap-2 cursor-pointer group">
-            <input
-              type="file"
-              accept="image/png, image/jpeg, image/webp"
-              onChange={onFileChange}
-              className="hidden"
-            />
-            <div className="flex items-center gap-2 text-xs text-text-secondary group-hover:text-sonar-green transition-colors border border-panel-border group-hover:border-sonar-green/50 rounded-lg px-3 py-1.5 bg-panel-bg/30">
-              <span>📷</span>
-              <span className="hidden sm:inline">
-                {selectedFile ? selectedFile.name : "Add photo"}
+      <div className="px-4 py-3 border-t-2 border-panel-border bg-gradient-to-r from-[rgba(0,0,0,0.3)] to-[rgba(0,0,0,0.2)] flex flex-col gap-2">
+        {/* Verification Progress */}
+        {verifying && (
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg px-3 py-2">
+            <div className="flex items-center gap-2 text-xs text-blue-400">
+              <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              <span className="font-semibold">
+                AI Verification in progress...
               </span>
-              <span className="sm:hidden">Photo</span>
             </div>
-          </label>
-        </div>
-        <div>
-          <button
-            disabled={uploading}
-            onClick={markSeenOrUndo}
-            className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
-              latestMeta
-                ? "bg-red-600/20 text-red-400 border-2 border-red-600/50 hover:bg-red-600/30"
-                : "bg-sonar-green text-black border-2 border-sonar-green hover:bg-sonar-green/90 shadow-[0_0_10px_rgba(0,255,157,0.3)]"
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            {uploading ? (
-              <span className="flex items-center gap-2">
-                <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                Uploading...
+          </div>
+        )}
+
+        {/* Verification Result Preview */}
+        {verificationResult && !latestMeta && (
+          <div className="bg-panel-bg/50 border border-panel-border rounded-lg px-3 py-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold text-text-secondary">
+                AI Confidence:
               </span>
-            ) : latestMeta ? (
-              "✕ Undo"
-            ) : (
-              "✓ Mark as seen"
-            )}
-          </button>
+              <VerificationBadge verification={verificationResult} size="sm" />
+            </div>
+            <ConfidenceMeter confidence={verificationResult.confidence} />
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex-1">
+            <label className="flex items-center gap-2 cursor-pointer group">
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                onChange={onFileChange}
+                className="hidden"
+                disabled={uploading || verifying}
+              />
+              <div className="flex items-center gap-2 text-xs text-text-secondary group-hover:text-sonar-green transition-colors border border-panel-border group-hover:border-sonar-green/50 rounded-lg px-3 py-1.5 bg-panel-bg/30">
+                <span>📷</span>
+                <span className="hidden sm:inline">
+                  {selectedFile ? selectedFile.name : "Add photo"}
+                </span>
+                <span className="sm:hidden">Photo</span>
+              </div>
+            </label>
+          </div>
+          <div>
+            <button
+              disabled={uploading || verifying}
+              onClick={markSeenOrUndo}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 ${
+                latestMeta
+                  ? "bg-red-600/20 text-red-400 border-2 border-red-600/50 hover:bg-red-600/30"
+                  : "bg-sonar-green text-black border-2 border-sonar-green hover:bg-sonar-green/90 shadow-[0_0_10px_rgba(0,255,157,0.3)]"
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              {verifying ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Verifying...
+                </span>
+              ) : uploading ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Uploading...
+                </span>
+              ) : latestMeta ? (
+                "✕ Undo"
+              ) : (
+                "✓ Mark as seen"
+              )}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Verification Confirmation Modal */}
+      <VerificationConfirmModal
+        open={showConfirmModal}
+        verification={pendingVerification}
+        fishName={fish.name}
+        onConfirm={handleConfirmSubmit}
+        onCancel={handleCancelSubmit}
+      />
     </div>
   );
 }

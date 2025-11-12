@@ -9,7 +9,15 @@ import { eq } from "drizzle-orm";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { fishId, latitude, longitude, timestamp, imageData, rarity } = body;
+    const {
+      fishId,
+      latitude,
+      longitude,
+      timestamp,
+      imageData,
+      rarity,
+      verification,
+    } = body;
 
     if (!fishId) {
       return new Response(JSON.stringify({ error: "Missing fishId" }), {
@@ -54,6 +62,7 @@ export async function POST(req: Request) {
       longitude: longitude ?? null,
       timestamp: timestamp ?? new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      verification: verification || null, // Store AI verification data
     };
 
     // write latest metadata for this fish (overwrites previous)
