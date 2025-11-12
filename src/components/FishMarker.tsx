@@ -67,26 +67,29 @@ export default function FishMarker({
         />
         {/* Tooltip with image - show on hover OR when hovered from list */}
         <div
-          className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-dark-navy border border-panel-border rounded shadow-lg transition-opacity duration-200 pointer-events-none ${
-            showTooltip ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-dark-navy border-2 border-panel-border rounded-lg shadow-xl transition-all duration-200 pointer-events-none z-[10000] ${
+            showTooltip
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95 group-hover:opacity-100 group-hover:scale-100"
           }`}
         >
-          <div className="flex flex-col items-center p-2 gap-2 min-w-[120px]">
+          <div className="flex flex-col items-center p-3 gap-2 min-w-[140px]">
             {/* Fish Image */}
-            <div className="w-20 h-20 rounded overflow-hidden bg-nautical-blue border border-panel-border flex items-center justify-center">
+            <div className="w-24 h-24 rounded-lg overflow-hidden bg-nautical-blue border-2 border-panel-border flex items-center justify-center shadow-inner">
               {!imageError && fish.image ? (
                 <img
                   src={fish.image}
                   alt={fish.name}
                   className="w-full h-full object-cover"
                   onError={() => setImageError(true)}
+                  loading="eager"
                 />
               ) : (
-                <div className="text-4xl">🐠</div>
+                <div className="text-5xl">🐠</div>
               )}
             </div>
             {/* Fish Info */}
-            <div className="text-center">
+            <div className="text-center space-y-1">
               <div
                 className={`font-bold text-sm ${
                   rarityColorClass.split(" ")[1]
@@ -94,9 +97,16 @@ export default function FishMarker({
               >
                 {fish.name}
               </div>
-              <div className="text-text-secondary text-[10px] uppercase">
+              <div className="text-text-secondary text-[10px] uppercase tracking-wider">
                 {fish.rarity}
               </div>
+            </div>
+          </div>
+          {/* Pointer arrow */}
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px">
+            <div className="border-8 border-transparent border-t-panel-border" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-[2px]">
+              <div className="border-[7px] border-transparent border-t-dark-navy" />
             </div>
           </div>
         </div>
