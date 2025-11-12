@@ -17,22 +17,32 @@ interface MapComponentProps {
 }
 
 const calculateMapCenter = (fishes: Fish[]) => {
-  if (fishes.length === 0) {
+  // Only consider fishes that have a latest sighting. Some species may not
+  // have any sightings yet (latestSighting === null) and including those
+  // would cause runtime errors when trying to read latitude/longitude.
+  const withSightings = fishes.filter(
+    (f) =>
+      f.latestSighting &&
+      Number.isFinite(f.latestSighting.latitude) &&
+      Number.isFinite(f.latestSighting.longitude)
+  );
+
+  if (withSightings.length === 0) {
     return { latitude: 10.095, longitude: 99.805 };
   }
 
-  const totalLat = fishes.reduce(
-    (sum, fish) => sum + fish.latestSighting.latitude,
+  const totalLat = withSightings.reduce(
+    (sum, fish) => sum + (fish.latestSighting!.latitude ?? 0),
     0
   );
-  const totalLon = fishes.reduce(
-    (sum, fish) => sum + fish.latestSighting.longitude,
+  const totalLon = withSightings.reduce(
+    (sum, fish) => sum + (fish.latestSighting!.longitude ?? 0),
     0
   );
 
   return {
-    latitude: totalLat / fishes.length,
-    longitude: totalLon / fishes.length,
+    latitude: totalLat / withSightings.length,
+    longitude: totalLon / withSightings.length,
   };
 };
 
@@ -156,15 +166,21 @@ export default function MapComponent({
             />
           </>
         )}
-        {fishes.map((fish) => (
-          <FishMarker
-            key={fish.id}
-            fish={fish}
-            isHovered={fish.id === hoveredFishId}
-            isAnyHovered={isAnyHovered}
-            pinged={pingedIds.has(fish.id)}
-          />
-        ))}
+        {/** Render markers only for fishes that have a latest sighting. */}
+        {fishes
+          .filter(
+            (f) =>
+              f.latestSighting && typeof f.latestSighting.latitude === "number"
+          )
+          .map((fish) => (
+            <FishMarker
+              key={fish.id}
+              fish={fish}
+              isHovered={fish.id === hoveredFishId}
+              isAnyHovered={isAnyHovered}
+              pinged={pingedIds.has(fish.id)}
+            />
+          ))}
 
         {/* Sensor markers (clickable) */}
         {showTemperatureSensors &&
