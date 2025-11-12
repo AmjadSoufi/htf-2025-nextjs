@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Fish } from "@/types/fish";
+import { useState, useMemo } from "react";
+import { Fish, Rarity } from "@/types/fish";
 import FishDetailModal from "./FishDetailModal";
 import Map from "./Map";
 import FishList from "./FishList";
@@ -20,6 +20,49 @@ export default function FishTrackerClient({
   const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
   const [historicalData, setHistoricalData] = useState<any | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Filter and search states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRarity, setSelectedRarity] = useState<Rarity | "ALL">("ALL");
+  const [sortBy, setSortBy] = useState<"rarity" | "name" | "temperature">(
+    "rarity"
+  );
+
+  // Filter and sort fish based on search and filters
+  const filteredAndSortedFishes = useMemo(() => {
+    let filtered = [...sortedFishes];
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (fish) =>
+          fish.name.toLowerCase().includes(query) ||
+          fish.species?.toLowerCase().includes(query) ||
+          fish.habitat?.toLowerCase().includes(query)
+      );
+    }
+
+    // Apply rarity filter
+    if (selectedRarity !== "ALL") {
+      filtered = filtered.filter((fish) => fish.rarity === selectedRarity);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      } else if (sortBy === "temperature") {
+        const tempA = a.latestSighting.temperature ?? -Infinity;
+        const tempB = b.latestSighting.temperature ?? -Infinity;
+        return tempB - tempA;
+      }
+      // Default is rarity (already sorted by sortedFishes)
+      return 0;
+    });
+
+    return filtered;
+  }, [sortedFishes, searchQuery, selectedRarity, sortBy]);
 
   const handleFishClick = async (fish: Fish) => {
     setSelectedFish(fish);
@@ -57,7 +100,10 @@ export default function FishTrackerClient({
         {/* Map Panel */}
         <Panel defaultSize={65} minSize={30}>
           <div className="w-full h-full relative shadow-[--shadow-map-panel]">
-            <Map fishes={fishes} hoveredFishId={hoveredFishId} />
+            <Map
+              fishes={filteredAndSortedFishes}
+              hoveredFishId={hoveredFishId}
+            />
           </div>
         </Panel>
 
@@ -74,9 +120,15 @@ export default function FishTrackerClient({
         {/* Fish List Panel */}
         <Panel defaultSize={35} minSize={20}>
           <FishList
-            fishes={sortedFishes}
+            fishes={filteredAndSortedFishes}
             onFishHover={setHoveredFishId}
             onFishClick={handleFishClick}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedRarity={selectedRarity}
+            onRarityChange={setSelectedRarity}
+            sortBy={sortBy}
+            onSortChange={setSortBy}
           />
         </Panel>
       </PanelGroup>
