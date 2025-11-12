@@ -130,10 +130,22 @@ Fishy Dex is a web-based application designed for fish enthusiasts, marine biolo
 
 ### Photo Upload System
 
-- Allow users to attach photographic evidence when marking a fish as seen
-- Support common image formats (JPEG, PNG, WebP)
-- Store photos either locally or integrate with cloud storage (S3, Cloudinary, etc.)
-- Display thumbnails in the fish details or user profile
+Implemented (local storage):
+
+- Users can attach photographic evidence when marking a fish as seen via the app UI.
+- Supported image formats: JPEG, PNG, WebP. Files are accepted client-side via a file input and uploaded as base64 JSON to the server API.
+- Photos are stored locally under `public/uploads/` (image files) and a per-fish metadata JSON file is written to `public/uploads/{fishId}.json` containing the latest sighting metadata and image URL.
+- Thumbnails are shown in the fish cards when a sighting with a photo exists.
+
+API endpoints:
+
+- `POST /api/sightings` — Accepts JSON payload { fishId, latitude, longitude, timestamp, imageData } where `imageData` is a data URL (base64). The endpoint writes the image to `public/uploads` and saves metadata for quick retrieval.
+- `GET /api/sightings?fishId={fishId}` — Returns the latest sighting metadata (including `imageUrl`) for the given fish if available.
+
+Notes & next steps:
+
+- Local storage is the simplest option for development. For production, switch to cloud storage (S3/Cloudinary) and store the image URL and metadata in your DB. The server-side POST handler is intentionally small and can be adapted to upload to a cloud provider instead of writing to disk.
+- Consider adding authentication checks and rate limits to the API, and server-side image validation or virus scanning for production.
 
 ### AI-Powered Verification
 
