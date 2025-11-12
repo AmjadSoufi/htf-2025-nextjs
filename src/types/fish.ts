@@ -8,6 +8,16 @@ export interface Fish {
     longitude: number;
     timestamp: string;
   };
+  // Optional rich metadata to support detailed card view
+  species?: string;
+  description?: string;
+  sizeCm?: number; // typical length
+  weightKg?: number; // typical weight
+  speed?: number; // arbitrary 0-100
+  agility?: number; // arbitrary 0-100
+  habitat?: string;
+  abilities?: string[];
+  conservationStatus?: string; // e.g., 'LC', 'VU', 'EN'
 }
 
 export type Rarity = "COMMON" | "RARE" | "EPIC";

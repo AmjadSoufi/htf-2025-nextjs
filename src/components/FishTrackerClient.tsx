@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Fish } from "@/types/fish";
+import FishDetailModal from "./FishDetailModal";
 import Map from "./Map";
 import FishList from "./FishList";
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -16,34 +17,83 @@ export default function FishTrackerClient({
   sortedFishes,
 }: FishTrackerClientProps) {
   const [hoveredFishId, setHoveredFishId] = useState<string | null>(null);
+  const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
+  const [historicalData, setHistoricalData] = useState<any | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
+  const handleFishClick = async (fish: Fish) => {
+    setSelectedFish(fish);
+    setModalOpen(true);
+    try {
+      const res = await fetch("/api/historical", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fishId: fish.id,
+          species: fish.name,
+          latestSighting: fish.latestSighting,
+        }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        setHistoricalData(json);
+      } else {
+        console.error("Failed to load historical data", await res.text());
+        setHistoricalData(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setHistoricalData(null);
+    }
+  };
 
   return (
-    <PanelGroup
-      direction="vertical"
-      className="flex-1"
-      autoSaveId="fish-tracker-client"
-    >
-      {/* Map Panel */}
-      <Panel defaultSize={65} minSize={30}>
-        <div className="w-full h-full relative shadow-[--shadow-map-panel]">
-          <Map fishes={fishes} hoveredFishId={hoveredFishId} />
-        </div>
-      </Panel>
-
-      {/* Resize Handle */}
-      <PanelResizeHandle className="h-1 bg-panel-border hover:bg-sonar-green transition-colors duration-200 cursor-row-resize relative group">
-        <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-sonar-green opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 bg-panel-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-0.5 bg-sonar-green rounded-full" />
+    <>
+      <PanelGroup
+        direction="vertical"
+        className="flex-1"
+        autoSaveId="fish-tracker-client"
+      >
+        {/* Map Panel */}
+        <Panel defaultSize={65} minSize={30}>
+          <div className="w-full h-full relative shadow-[--shadow-map-panel]">
+            <Map fishes={fishes} hoveredFishId={hoveredFishId} />
           </div>
-        </div>
-      </PanelResizeHandle>
+        </Panel>
 
-      {/* Fish List Panel */}
-      <Panel defaultSize={35} minSize={20}>
-        <FishList fishes={sortedFishes} onFishHover={setHoveredFishId} />
-      </Panel>
-    </PanelGroup>
+        {/* Resize Handle */}
+        <PanelResizeHandle className="h-1 bg-panel-border hover:bg-sonar-green transition-colors duration-200 cursor-row-resize relative group">
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-1 bg-sonar-green opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 bg-panel-border rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-0.5 bg-sonar-green rounded-full" />
+            </div>
+          </div>
+        </PanelResizeHandle>
+
+        {/* Fish List Panel */}
+        <Panel defaultSize={35} minSize={20}>
+          <FishList
+            fishes={sortedFishes}
+            onFishHover={setHoveredFishId}
+            onFishClick={handleFishClick}
+          />
+        </Panel>
+      </PanelGroup>
+
+      {/* Fish Detail Modal */}
+      {modalOpen && selectedFish ? (
+        <FishDetailModal
+          fish={selectedFish}
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setSelectedFish(null);
+            setHistoricalData(null);
+          }}
+          historical={historicalData}
+        />
+      ) : null}
+    </>
   );
 }
