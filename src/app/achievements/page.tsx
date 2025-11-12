@@ -56,30 +56,30 @@ export default function AchievementsPage() {
   const getTierColor = (tier: string) => {
     switch (tier) {
       case "PLATINUM":
-        return "from-purple-400 to-pink-400";
+        return "from-danger-red to-warning-amber";
       case "GOLD":
-        return "from-yellow-400 to-orange-400";
+        return "from-warning-amber to-sonar-green";
       case "SILVER":
-        return "from-gray-300 to-gray-400";
+        return "from-text-secondary to-ocean-teal";
       case "BRONZE":
-        return "from-orange-300 to-orange-500";
+        return "from-warning-amber to-nautical-blue";
       default:
-        return "from-gray-200 to-gray-300";
+        return "from-panel-border to-dark-navy";
     }
   };
 
   const getTierBorder = (tier: string) => {
     switch (tier) {
       case "PLATINUM":
-        return "border-purple-500";
+        return "border-danger-red";
       case "GOLD":
-        return "border-yellow-500";
+        return "border-warning-amber";
       case "SILVER":
-        return "border-gray-400";
+        return "border-ocean-teal";
       case "BRONZE":
-        return "border-orange-500";
+        return "border-warning-amber";
       default:
-        return "border-gray-300";
+        return "border-panel-border";
     }
   };
 
@@ -95,18 +95,18 @@ export default function AchievementsPage() {
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-50 flex items-center justify-center">
-        <div className="bg-white p-8 rounded-2xl shadow-lg text-center">
+      <div className="min-h-screen bg-deep-ocean flex items-center justify-center p-4">
+        <div className="bg-dark-navy/80 backdrop-blur-lg p-8 rounded-2xl shadow-[--shadow-cockpit] text-center border border-panel-border">
           <div className="text-6xl mb-4">🔒</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <h2 className="text-2xl font-bold text-text-primary mb-2">
             Sign In Required
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="text-text-secondary mb-4">
             Please sign in to view your achievements
           </p>
           <a
             href="/login"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="inline-block px-6 py-2 bg-sonar-green/20 hover:bg-sonar-green/30 text-sonar-green border border-sonar-green rounded-lg transition-all shadow-[--shadow-glow-common]"
           >
             Sign In
           </a>
@@ -116,12 +116,12 @@ export default function AchievementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-50 p-4 md:p-8">
+    <div className="min-h-screen bg-deep-ocean p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <a
           href="/"
-          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-lg shadow-md transition-all font-medium"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-dark-navy hover:bg-nautical-blue text-sonar-green rounded-lg shadow-[--shadow-cockpit-border] transition-all font-medium border border-panel-border"
         >
           <svg
             className="w-5 h-5"
@@ -141,10 +141,10 @@ export default function AchievementsPage() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-sonar-green mb-2 text-shadow-[--shadow-glow-text]">
             🏅 Achievements
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Track your progress and unlock rewards!
           </p>
         </div>
@@ -152,29 +152,31 @@ export default function AchievementsPage() {
         {/* Stats Overview */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-xl p-4 shadow-lg text-center">
-              <div className="text-3xl font-bold text-blue-600">
+            <div className="bg-dark-navy/50 backdrop-blur-lg rounded-xl p-4 shadow-[--shadow-cockpit-border] text-center border border-panel-border">
+              <div className="text-3xl font-bold text-sonar-green">
                 {unlockedCount}/{achievements.length}
               </div>
-              <div className="text-sm text-gray-600">Achievements</div>
+              <div className="text-sm text-text-secondary">Achievements</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-lg text-center">
-              <div className="text-3xl font-bold text-green-600">
+            <div className="bg-dark-navy/50 backdrop-blur-lg rounded-xl p-4 shadow-[--shadow-cockpit-border] text-center border border-panel-border">
+              <div className="text-3xl font-bold text-warning-amber">
                 {totalPoints}
               </div>
-              <div className="text-sm text-gray-600">Achievement Points</div>
+              <div className="text-sm text-text-secondary">
+                Achievement Points
+              </div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-lg text-center">
-              <div className="text-3xl font-bold text-purple-600">
+            <div className="bg-dark-navy/50 backdrop-blur-lg rounded-xl p-4 shadow-[--shadow-cockpit-border] text-center border border-panel-border">
+              <div className="text-3xl font-bold text-ocean-teal">
                 {stats.uniqueFishSpotted}
               </div>
-              <div className="text-sm text-gray-600">Unique Fish</div>
+              <div className="text-sm text-text-secondary">Unique Fish</div>
             </div>
-            <div className="bg-white rounded-xl p-4 shadow-lg text-center">
-              <div className="text-3xl font-bold text-orange-600">
+            <div className="bg-dark-navy/50 backdrop-blur-lg rounded-xl p-4 shadow-[--shadow-cockpit-border] text-center border border-panel-border">
+              <div className="text-3xl font-bold text-text-primary">
                 {stats.totalSightings}
               </div>
-              <div className="text-sm text-gray-600">Total Sightings</div>
+              <div className="text-sm text-text-secondary">Total Sightings</div>
             </div>
           </div>
         )}
@@ -185,10 +187,10 @@ export default function AchievementsPage() {
             <button
               key={tier}
               onClick={() => setSelectedTier(tier)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg font-medium transition-all border ${
                 selectedTier === tier
-                  ? "bg-blue-600 text-white shadow-lg scale-105"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-sonar-green/20 text-sonar-green border-sonar-green shadow-[--shadow-glow-common]"
+                  : "bg-dark-navy text-text-secondary border-panel-border hover:bg-nautical-blue"
               }`}
             >
               {tier}
@@ -199,26 +201,28 @@ export default function AchievementsPage() {
         {/* Achievements Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sonar-green mx-auto"></div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAchievements.map((achievement) => (
               <div
                 key={achievement.id}
-                className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all hover:scale-105 ${
+                className={`bg-dark-navy/50 backdrop-blur-lg rounded-xl shadow-[--shadow-cockpit-border] overflow-hidden transition-all hover:scale-105 border ${
                   achievement.unlocked
-                    ? `border-2 ${getTierBorder(achievement.tier)}`
-                    : "opacity-60"
+                    ? `border-2 ${getTierBorder(
+                        achievement.tier
+                      )} shadow-[--shadow-glow-common]`
+                    : "opacity-60 border-panel-border"
                 }`}
               >
                 {/* Tier Badge */}
                 <div
                   className={`bg-linear-to-r ${getTierColor(
                     achievement.tier
-                  )} p-2 text-center`}
+                  )} p-2 text-center border-b border-panel-border`}
                 >
-                  <span className="text-xs font-bold text-white">
+                  <span className="text-xs font-bold text-dark-navy">
                     {achievement.tier}
                   </span>
                 </div>
@@ -233,25 +237,25 @@ export default function AchievementsPage() {
                     >
                       {achievement.icon}
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800">
+                    <h3 className="text-xl font-bold text-text-primary">
                       {achievement.name}
                     </h3>
                   </div>
 
-                  <p className="text-sm text-gray-600 text-center mb-4">
+                  <p className="text-sm text-text-secondary text-center mb-4">
                     {achievement.description}
                   </p>
 
                   <div className="flex items-center justify-between">
                     <div className="text-center">
-                      <div className="text-lg font-bold text-blue-600">
+                      <div className="text-lg font-bold text-sonar-green">
                         +{achievement.points}
                       </div>
-                      <div className="text-xs text-gray-500">points</div>
+                      <div className="text-xs text-text-secondary">points</div>
                     </div>
 
                     {achievement.unlocked ? (
-                      <div className="flex items-center gap-2 text-green-600">
+                      <div className="flex items-center gap-2 text-sonar-green">
                         <svg
                           className="w-6 h-6"
                           fill="none"
@@ -268,7 +272,7 @@ export default function AchievementsPage() {
                         <span className="font-medium">Unlocked!</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 text-gray-400">
+                      <div className="flex items-center gap-2 text-text-secondary">
                         <svg
                           className="w-6 h-6"
                           fill="none"
@@ -288,8 +292,8 @@ export default function AchievementsPage() {
                   </div>
 
                   {achievement.unlocked && achievement.unlockedAt && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 text-center">
-                      <div className="text-xs text-gray-500">
+                    <div className="mt-3 pt-3 border-t border-panel-border text-center">
+                      <div className="text-xs text-text-secondary">
                         Unlocked on{" "}
                         {new Date(achievement.unlockedAt).toLocaleDateString()}
                       </div>
@@ -302,7 +306,7 @@ export default function AchievementsPage() {
         )}
 
         {filteredAchievements.length === 0 && !loading && (
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-text-secondary">
             No achievements found for this tier.
           </div>
         )}

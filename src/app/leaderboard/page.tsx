@@ -61,23 +61,23 @@ export default function LeaderboardPage() {
   const getRankColor = (rank?: string) => {
     switch (rank) {
       case "Master":
-        return "text-purple-600 font-bold";
+        return "text-danger-red font-bold";
       case "Expert":
-        return "text-blue-600 font-semibold";
+        return "text-sonar-green font-semibold";
       case "Intermediate":
-        return "text-green-600";
+        return "text-warning-amber";
       default:
-        return "text-gray-600";
+        return "text-text-secondary";
     }
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-cyan-50 p-4 md:p-8">
+    <div className="min-h-screen bg-deep-ocean p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <a
           href="/"
-          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white hover:bg-gray-100 text-gray-700 rounded-lg shadow-md transition-all font-medium"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-dark-navy hover:bg-nautical-blue text-sonar-green rounded-lg shadow-[--shadow-cockpit-border] transition-all font-medium border border-panel-border"
         >
           <svg
             className="w-5 h-5"
@@ -97,10 +97,10 @@ export default function LeaderboardPage() {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-sonar-green mb-2 [text-shadow:--shadow-glow-text]">
             🏆 Leaderboard
           </h1>
-          <p className="text-gray-600">
+          <p className="text-text-secondary">
             Compete with other fish spotters around the world!
           </p>
         </div>
@@ -111,10 +111,10 @@ export default function LeaderboardPage() {
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-6 py-2 rounded-lg font-medium transition-all ${
+              className={`px-6 py-2 rounded-lg font-medium transition-all border ${
                 period === p
-                  ? "bg-blue-600 text-white shadow-lg scale-105"
-                  : "bg-white text-gray-700 hover:bg-gray-100"
+                  ? "bg-sonar-green/20 text-sonar-green border-sonar-green shadow-[--shadow-glow-common]"
+                  : "bg-dark-navy text-text-secondary border-panel-border hover:bg-nautical-blue"
               }`}
             >
               {p === "all-time"
@@ -127,25 +127,25 @@ export default function LeaderboardPage() {
         {/* Leaderboard */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sonar-green mx-auto"></div>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-dark-navy/50 backdrop-blur-lg rounded-2xl shadow-[--shadow-cockpit] overflow-hidden border border-panel-border">
             {/* Top 3 Podium */}
             {leaderboard.length >= 3 && (
-              <div className="bg-linear-to-r from-yellow-50 to-orange-50 p-8">
+              <div className="bg-nautical-blue/30 p-8 border-b border-panel-border">
                 <div className="flex justify-center items-end gap-4 max-w-3xl mx-auto">
                   {/* 2nd Place */}
                   <div className="flex-1 text-center">
-                    <div className="bg-gray-200 rounded-t-lg p-4 h-32 flex flex-col justify-end">
+                    <div className="bg-dark-navy/80 border border-panel-border rounded-t-lg p-4 h-32 flex flex-col justify-end">
                       <div className="text-4xl mb-2">🥈</div>
-                      <div className="font-bold text-gray-800">
+                      <div className="font-bold text-text-primary">
                         {leaderboard[1].name}
                       </div>
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-text-secondary">
                         {leaderboard[1].totalPoints}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-text-secondary">
                         {leaderboard[1].uniqueFishSpotted} fish
                       </div>
                     </div>
@@ -153,15 +153,15 @@ export default function LeaderboardPage() {
 
                   {/* 1st Place */}
                   <div className="flex-1 text-center">
-                    <div className="bg-linear-to-b from-yellow-200 to-yellow-300 rounded-t-lg p-4 h-40 flex flex-col justify-end shadow-lg">
+                    <div className="bg-sonar-green/10 border-2 border-sonar-green rounded-t-lg p-4 h-40 flex flex-col justify-end shadow-[--shadow-glow-common]">
                       <div className="text-5xl mb-2">🥇</div>
-                      <div className="font-bold text-gray-800 text-lg">
+                      <div className="font-bold text-sonar-green text-lg">
                         {leaderboard[0].name}
                       </div>
-                      <div className="text-3xl font-bold text-yellow-700">
+                      <div className="text-3xl font-bold text-sonar-green">
                         {leaderboard[0].totalPoints}
                       </div>
-                      <div className="text-sm text-gray-700">
+                      <div className="text-sm text-text-secondary">
                         {leaderboard[0].uniqueFishSpotted} fish
                       </div>
                     </div>
@@ -169,15 +169,15 @@ export default function LeaderboardPage() {
 
                   {/* 3rd Place */}
                   <div className="flex-1 text-center">
-                    <div className="bg-orange-200 rounded-t-lg p-4 h-24 flex flex-col justify-end">
+                    <div className="bg-dark-navy/80 border border-panel-border rounded-t-lg p-4 h-24 flex flex-col justify-end">
                       <div className="text-3xl mb-2">🥉</div>
-                      <div className="font-bold text-gray-800">
+                      <div className="font-bold text-text-primary">
                         {leaderboard[2].name}
                       </div>
-                      <div className="text-xl font-bold text-orange-600">
+                      <div className="text-xl font-bold text-warning-amber">
                         {leaderboard[2].totalPoints}
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-text-secondary">
                         {leaderboard[2].uniqueFishSpotted} fish
                       </div>
                     </div>
@@ -187,28 +187,28 @@ export default function LeaderboardPage() {
             )}
 
             {/* Rest of Leaderboard */}
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-panel-border">
               {leaderboard.map((entry, idx) => {
                 const isCurrentUser = session?.user?.id === entry.userId;
                 return (
                   <div
                     key={entry.userId}
-                    className={`p-4 hover:bg-gray-50 transition-colors ${
+                    className={`p-4 hover:bg-nautical-blue/30 transition-colors ${
                       isCurrentUser
-                        ? "bg-blue-50 border-l-4 border-blue-600"
+                        ? "bg-sonar-green/10 border-l-4 border-sonar-green"
                         : ""
                     }`}
                   >
                     <div className="flex items-center gap-4">
                       {/* Position */}
                       <div className="w-16 text-center">
-                        <div className="text-2xl font-bold">
+                        <div className="text-2xl font-bold text-text-primary">
                           {getMedalEmoji(entry.position)}
                         </div>
                       </div>
 
                       {/* Avatar */}
-                      <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-lg">
+                      <div className="w-12 h-12 rounded-full bg-linear-to-br from-ocean-teal to-sonar-green flex items-center justify-center text-dark-navy font-bold text-lg border border-panel-border">
                         {entry.image ? (
                           <img
                             src={entry.image}
@@ -222,15 +222,15 @@ export default function LeaderboardPage() {
 
                       {/* User Info */}
                       <div className="flex-1">
-                        <div className="font-bold text-gray-800 flex items-center gap-2">
+                        <div className="font-bold text-text-primary flex items-center gap-2">
                           {entry.name}
                           {isCurrentUser && (
-                            <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded">
+                            <span className="text-xs bg-sonar-green text-dark-navy px-2 py-0.5 rounded font-bold">
                               You
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-text-secondary">
                           {entry.rank && (
                             <span className={getRankColor(entry.rank)}>
                               {entry.rank}
@@ -243,28 +243,34 @@ export default function LeaderboardPage() {
 
                       {/* Points */}
                       <div className="text-right">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-sonar-green">
                           {entry.totalPoints}
                         </div>
-                        <div className="text-xs text-gray-500">points</div>
+                        <div className="text-xs text-text-secondary">
+                          points
+                        </div>
                       </div>
 
                       {/* Stats */}
                       <div className="hidden md:flex gap-4 text-center">
                         {entry.rareFishSpotted !== undefined && (
                           <div>
-                            <div className="text-lg font-bold text-orange-600">
+                            <div className="text-lg font-bold text-warning-amber">
                               {entry.rareFishSpotted}
                             </div>
-                            <div className="text-xs text-gray-500">⭐ Rare</div>
+                            <div className="text-xs text-text-secondary">
+                              ⭐ Rare
+                            </div>
                           </div>
                         )}
                         {entry.epicFishSpotted !== undefined && (
                           <div>
-                            <div className="text-lg font-bold text-purple-600">
+                            <div className="text-lg font-bold text-danger-red">
                               {entry.epicFishSpotted}
                             </div>
-                            <div className="text-xs text-gray-500">💎 Epic</div>
+                            <div className="text-xs text-text-secondary">
+                              💎 Epic
+                            </div>
                           </div>
                         )}
                       </div>
@@ -275,7 +281,7 @@ export default function LeaderboardPage() {
             </div>
 
             {leaderboard.length === 0 && (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-text-secondary">
                 No data available for this period.
               </div>
             )}

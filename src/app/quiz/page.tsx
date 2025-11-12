@@ -10,8 +10,6 @@ interface QuizQuestion {
   correctAnswer: number;
   difficulty: "easy" | "medium" | "hard";
   points: number;
-  fishId?: string;
-  fishImage?: string;
 }
 
 const QUIZ_QUESTIONS: QuizQuestion[] = [
@@ -114,7 +112,6 @@ export default function QuizPage() {
     newAnswered[currentQuestion] = true;
     setAnsweredQuestions(newAnswered);
 
-    // Check if quiz is completed
     if (newAnswered.every((a) => a)) {
       setTimeout(() => {
         setQuizCompleted(true);
@@ -150,13 +147,13 @@ export default function QuizPage() {
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "easy":
-        return "text-green-500";
+        return "text-sonar-green";
       case "medium":
-        return "text-yellow-500";
+        return "text-warning-amber";
       case "hard":
-        return "text-red-500";
+        return "text-danger-red";
       default:
-        return "text-gray-500";
+        return "text-text-secondary";
     }
   };
 
@@ -165,22 +162,22 @@ export default function QuizPage() {
     const percentage = Math.round((score / totalPoints) * 100);
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-cyan-900 p-4 md:p-8 flex items-center justify-center">
-        <div className="max-w-2xl w-full bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+      <div className="min-h-screen bg-deep-ocean p-4 md:p-8 flex items-center justify-center">
+        <div className="max-w-2xl w-full bg-dark-navy/80 backdrop-blur-lg rounded-2xl shadow-[--shadow-cockpit] p-8 border border-panel-border">
           <div className="text-center">
             <div className="text-6xl mb-4">
               {percentage >= 80 ? "🏆" : percentage >= 60 ? "🎉" : "📚"}
             </div>
-            <h2 className="text-4xl font-bold text-white mb-4">
+            <h2 className="text-4xl font-bold text-sonar-green mb-4 text-shadow-[--shadow-glow-text]">
               Quiz Completed!
             </h2>
-            <div className="text-6xl font-bold text-yellow-400 mb-4">
+            <div className="text-6xl font-bold text-warning-amber mb-4">
               {score}/{totalPoints}
             </div>
-            <div className="text-2xl text-white mb-2">
+            <div className="text-2xl text-text-primary mb-2">
               {percentage}% Correct
             </div>
-            <div className="text-lg text-white/80 mb-8">
+            <div className="text-lg text-text-secondary mb-8">
               {percentage >= 80
                 ? "Outstanding! You're a marine expert! 🌟"
                 : percentage >= 60
@@ -189,7 +186,7 @@ export default function QuizPage() {
             </div>
             <button
               onClick={resetQuiz}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-lg transition-all shadow-lg hover:shadow-xl"
+              className="px-8 py-3 bg-sonar-green/20 hover:bg-sonar-green/30 text-sonar-green rounded-lg font-bold text-lg transition-all shadow-[--shadow-glow-common] border border-sonar-green"
             >
               Take Quiz Again
             </button>
@@ -200,12 +197,11 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-900 via-blue-800 to-cyan-900 p-4 md:p-8">
+    <div className="min-h-screen bg-deep-ocean p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
         <a
           href="/"
-          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white rounded-lg shadow-lg transition-all font-medium border border-white/20"
+          className="inline-flex items-center gap-2 mb-6 px-4 py-2 bg-dark-navy hover:bg-nautical-blue text-sonar-green rounded-lg shadow-[--shadow-cockpit-border] transition-all font-medium border border-panel-border"
         >
           <svg
             className="w-5 h-5"
@@ -223,25 +219,23 @@ export default function QuizPage() {
           Back to Tracker
         </a>
 
-        {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+          <h1 className="text-4xl md:text-5xl font-bold text-sonar-green mb-2 text-shadow-[--shadow-glow-text]">
             🧠 Marine Quiz
           </h1>
-          <p className="text-white/80">Test your ocean knowledge!</p>
+          <p className="text-text-secondary">Test your ocean knowledge!</p>
         </div>
 
-        {/* Progress Bar */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-white font-medium">
+            <span className="text-text-primary font-medium">
               Question {currentQuestion + 1} of {QUIZ_QUESTIONS.length}
             </span>
-            <span className="text-yellow-400 font-bold">Score: {score}</span>
+            <span className="text-warning-amber font-bold">Score: {score}</span>
           </div>
-          <div className="w-full bg-white/20 rounded-full h-3">
+          <div className="w-full bg-dark-navy/50 rounded-full h-3 border border-panel-border">
             <div
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 h-3 rounded-full transition-all duration-300"
+              className="bg-linear-to-r from-ocean-teal to-sonar-green h-3 rounded-full transition-all duration-300"
               style={{
                 width: `${
                   ((currentQuestion + 1) / QUIZ_QUESTIONS.length) * 100
@@ -251,22 +245,21 @@ export default function QuizPage() {
           </div>
         </div>
 
-        {/* Question Card */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20 mb-6">
+        <div className="bg-dark-navy/50 backdrop-blur-lg rounded-2xl shadow-[--shadow-cockpit] p-8 border border-panel-border mb-6">
           <div className="flex items-center justify-between mb-6">
             <span
               className={`px-4 py-1 rounded-full font-medium ${getDifficultyColor(
                 question.difficulty
-              )} bg-white/20`}
+              )} bg-dark-navy/80 border border-panel-border`}
             >
               {question.difficulty.toUpperCase()}
             </span>
-            <span className="text-yellow-400 font-bold">
+            <span className="text-warning-amber font-bold">
               +{question.points} points
             </span>
           </div>
 
-          <h2 className="text-2xl md:text-3xl font-bold text-white mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-text-primary mb-8">
             {question.question}
           </h2>
 
@@ -282,12 +275,12 @@ export default function QuizPage() {
                   key={index}
                   onClick={() => handleAnswer(index)}
                   disabled={answeredQuestions[currentQuestion]}
-                  className={`w-full p-4 rounded-xl font-medium text-lg text-left transition-all ${
+                  className={`w-full p-4 rounded-xl font-medium text-lg text-left transition-all border ${
                     showCorrect
-                      ? "bg-green-500 text-white border-2 border-green-400"
+                      ? "bg-sonar-green/20 text-sonar-green border-sonar-green shadow-[--shadow-glow-common]"
                       : showIncorrect
-                      ? "bg-red-500 text-white border-2 border-red-400"
-                      : "bg-white/10 hover:bg-white/20 text-white border-2 border-white/20 hover:border-white/40"
+                      ? "bg-danger-red/20 text-danger-red border-danger-red"
+                      : "bg-dark-navy/80 hover:bg-nautical-blue text-text-primary border-panel-border hover:border-ocean-teal"
                   } ${
                     answeredQuestions[currentQuestion]
                       ? "cursor-not-allowed"
@@ -298,10 +291,10 @@ export default function QuizPage() {
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         showCorrect
-                          ? "bg-white text-green-500"
+                          ? "bg-sonar-green text-dark-navy"
                           : showIncorrect
-                          ? "bg-white text-red-500"
-                          : "bg-white/20 text-white"
+                          ? "bg-danger-red text-white"
+                          : "bg-ocean-teal/20 text-text-primary"
                       }`}
                     >
                       {showCorrect
@@ -319,13 +312,13 @@ export default function QuizPage() {
 
           {showResult && (
             <div
-              className={`mt-6 p-4 rounded-lg ${
+              className={`mt-6 p-4 rounded-lg border ${
                 selectedAnswer === question.correctAnswer
-                  ? "bg-green-500/20 border border-green-500/50"
-                  : "bg-red-500/20 border border-red-500/50"
+                  ? "bg-sonar-green/10 border-sonar-green"
+                  : "bg-danger-red/10 border-danger-red"
               }`}
             >
-              <p className="text-white font-medium">
+              <p className="text-text-primary font-medium">
                 {selectedAnswer === question.correctAnswer
                   ? "🎉 Correct! Great job!"
                   : `❌ Incorrect. The correct answer was: ${
@@ -336,12 +329,11 @@ export default function QuizPage() {
           )}
         </div>
 
-        {/* Navigation */}
         <div className="flex justify-between items-center">
           <button
             onClick={previousQuestion}
             disabled={currentQuestion === 0}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all"
+            className="px-6 py-3 bg-dark-navy/80 hover:bg-nautical-blue disabled:opacity-50 disabled:cursor-not-allowed text-text-primary rounded-lg font-medium transition-all border border-panel-border"
           >
             ← Previous
           </button>
@@ -352,10 +344,10 @@ export default function QuizPage() {
                 key={index}
                 className={`w-3 h-3 rounded-full ${
                   answeredQuestions[index]
-                    ? "bg-green-500"
+                    ? "bg-sonar-green shadow-[--shadow-glow-common]"
                     : index === currentQuestion
-                    ? "bg-yellow-400"
-                    : "bg-white/20"
+                    ? "bg-warning-amber"
+                    : "bg-panel-border"
                 }`}
               />
             ))}
@@ -364,7 +356,7 @@ export default function QuizPage() {
           <button
             onClick={nextQuestion}
             disabled={currentQuestion === QUIZ_QUESTIONS.length - 1}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-all"
+            className="px-6 py-3 bg-dark-navy/80 hover:bg-nautical-blue disabled:opacity-50 disabled:cursor-not-allowed text-text-primary rounded-lg font-medium transition-all border border-panel-border"
           >
             Next →
           </button>
