@@ -39,6 +39,33 @@ export default function FishTrackerLayout({
               →
             </span>
           </Link>
+          <Link
+            href="/leaderboard"
+            className="border-2 border-yellow-500/50 hover:border-yellow-500 bg-yellow-500/10 hover:bg-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.3)] hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 group"
+          >
+            <span className="text-yellow-400 font-bold">🏆 LEADERBOARD</span>
+            <span className="text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              →
+            </span>
+          </Link>
+          <Link
+            href="/achievements"
+            className="border-2 border-purple-500/50 hover:border-purple-500 bg-purple-500/10 hover:bg-purple-500/20 shadow-[0_0_10px_rgba(168,85,247,0.3)] hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 group"
+          >
+            <span className="text-purple-400 font-bold">🏅 ACHIEVEMENTS</span>
+            <span className="text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              →
+            </span>
+          </Link>
+          <Link
+            href="/quiz"
+            className="border-2 border-blue-500/50 hover:border-blue-500 bg-blue-500/10 hover:bg-blue-500/20 shadow-[0_0_10px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2 group"
+          >
+            <span className="text-blue-400 font-bold">🧠 QUIZ</span>
+            <span className="text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              →
+            </span>
+          </Link>
           <div className="border border-panel-border shadow-[--shadow-cockpit-border] px-3 py-1 rounded">
             <span className="text-sonar-green">STATUS:</span>
             <span className="text-sonar-green ml-2 font-bold">OPERATIONAL</span>

@@ -20,7 +20,19 @@ export async function GET(req: Request) {
 
     if (!rows || rows.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, data: { xp: 0, rank: "Beginner" } }),
+        JSON.stringify({
+          success: true,
+          data: {
+            xp: 0,
+            rank: "Beginner",
+            totalPoints: 0,
+            uniqueFishSpotted: 0,
+            totalSightings: 0,
+            rareFishSpotted: 0,
+            epicFishSpotted: 0,
+            verifiedSightings: 0,
+          },
+        }),
         { status: 200 }
       );
     }
@@ -29,7 +41,16 @@ export async function GET(req: Request) {
     return new Response(
       JSON.stringify({
         success: true,
-        data: { xp: Number(row.xp) || 0, rank: row.rank },
+        data: {
+          xp: Number(row.xp) || 0,
+          rank: row.rank,
+          totalPoints: Number(row.totalPoints) || 0,
+          uniqueFishSpotted: Number(row.uniqueFishSpotted) || 0,
+          totalSightings: Number(row.totalSightings) || 0,
+          rareFishSpotted: Number(row.rareFishSpotted) || 0,
+          epicFishSpotted: Number(row.epicFishSpotted) || 0,
+          verifiedSightings: Number(row.verifiedSightings) || 0,
+        },
       }),
       { status: 200 }
     );

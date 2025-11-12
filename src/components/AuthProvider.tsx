@@ -11,9 +11,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 export function UserInfo() {
   const { data: session, isPending } = useSession();
 
-  const [progress, setProgress] = useState<{ xp: number; rank: string } | null>(
-    null
-  );
+  const [progress, setProgress] = useState<{
+    xp: number;
+    rank: string;
+    totalPoints: number;
+    uniqueFishSpotted: number;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -72,12 +75,19 @@ export function UserInfo() {
         <p className="text-sm text-text-secondary">{session.user.email}</p>
         {progress ? (
           <p className="text-sm text-text-secondary mt-1">
-            XP:{" "}
-            <span className="font-medium text-sonar-green">{progress.xp}</span>{" "}
-            • Rank: <span className="font-medium">{progress.rank}</span>
+            <span className="font-medium text-yellow-400">
+              {progress.totalPoints || 0} pts
+            </span>
+            {" • "}
+            <span className="font-medium text-sonar-green">
+              {progress.xp}
+            </span>{" "}
+            XP
+            {" • "}
+            <span className="font-medium">{progress.rank}</span>
           </p>
         ) : (
-          <p className="text-sm text-text-secondary mt-1">XP: — • Rank: —</p>
+          <p className="text-sm text-text-secondary mt-1">Loading stats...</p>
         )}
       </div>
       <button

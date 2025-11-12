@@ -63,5 +63,47 @@ export const userProgress = sqliteTable("user_progress", {
     .references(() => user.id, { onDelete: "cascade" }),
   xp: integer("xp").notNull(),
   rank: text("rank").notNull(),
+  totalPoints: integer("totalPoints").notNull().default(0),
+  uniqueFishSpotted: integer("uniqueFishSpotted").notNull().default(0),
+  totalSightings: integer("totalSightings").notNull().default(0),
+  rareFishSpotted: integer("rareFishSpotted").notNull().default(0),
+  epicFishSpotted: integer("epicFishSpotted").notNull().default(0),
+  verifiedSightings: integer("verifiedSightings").notNull().default(0),
   updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
+});
+
+// User fish sightings - track individual sightings
+export const userSightings = sqliteTable("user_sightings", {
+  id: text("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  fishId: text("fishId").notNull(),
+  fishName: text("fishName").notNull(),
+  rarity: text("rarity").notNull(), // COMMON, RARE, EPIC
+  latitude: integer("latitude", { mode: "number" }),
+  longitude: integer("longitude", { mode: "number" }),
+  imageUrl: text("imageUrl"),
+  verified: integer("verified", { mode: "boolean" }).notNull().default(false),
+  verificationScore: integer("verificationScore", { mode: "number" }),
+  photoQuality: text("photoQuality"), // LOW, MEDIUM, HIGH
+  points: integer("points").notNull().default(0),
+  region: text("region"), // e.g., "North Atlantic", "Pacific", etc.
+  timestamp: integer("timestamp", { mode: "timestamp" }).notNull(),
+  createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
+});
+
+// User achievements
+export const userAchievements = sqliteTable("user_achievements", {
+  id: text("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  achievementId: text("achievementId").notNull(), // e.g., "FIRST_SIGHTING", "10_FISH", etc.
+  achievementName: text("achievementName").notNull(),
+  achievementDescription: text("achievementDescription").notNull(),
+  achievementIcon: text("achievementIcon").notNull(),
+  achievementTier: text("achievementTier").notNull(), // BRONZE, SILVER, GOLD, PLATINUM
+  points: integer("points").notNull(),
+  unlockedAt: integer("unlockedAt", { mode: "timestamp" }).notNull(),
 });

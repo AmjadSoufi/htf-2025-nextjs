@@ -1,22 +1,22 @@
 {
-  "id": "8e471121-32da-4642-8c56-52c5474c95cc",
+  "id": "52060d44-29ef-477f-a836-6596a7ba4a53",
   "fishId": "33e68a9c-8c46-4610-80ac-7c527e613db7",
-  "imageUrl": "/uploads/1762958258709-5998ec2a-7588-42a0-9fc8-9c1e7bd2709f.jpg",
-  "latitude": 10.09592543612809,
-  "longitude": 99.79921556120682,
-  "timestamp": "2025-11-12T14:35:55.311Z",
-  "createdAt": "2025-11-12T14:37:38.710Z",
+  "imageUrl": "/uploads/1762959462537-9082cf07-c6e8-4798-8e9f-b580e20d15c8.jpg",
+  "latitude": 10.09855045088025,
+  "longitude": 99.79614720627491,
+  "timestamp": "2025-11-12T14:53:55.379Z",
+  "createdAt": "2025-11-12T14:57:42.539Z",
   "verification": {
     "isVerified": false,
-    "confidence": 0.538645736205684,
+    "confidence": 0.5534569883921897,
     "detectedSpecies": "https://upload.wikimedia.org/wikipedia/commons/a/a4/White_eyed_moray_eel.jpg",
-    "matchScore": 0.538645736205684,
+    "matchScore": 0.5534569883921897,
     "reasons": [
       "Moderate confidence - manual review recommended",
       "Some fish features detected",
       "Species characteristics partially match",
       "Good image quality"
     ],
-    "timestamp": "2025-11-12T14:37:34.651Z"
+    "timestamp": "2025-11-12T14:57:40.728Z"
   }
 }

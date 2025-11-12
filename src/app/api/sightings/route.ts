@@ -4,19 +4,23 @@ import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { calculatePoints, checkNewAchievements } from "@/lib/achievements";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
       fishId,
+      fishName,
       latitude,
       longitude,
       timestamp,
       imageData,
       rarity,
       verification,
+      photoQuality,
+      region,
     } = body;
 
     if (!fishId) {
@@ -24,6 +28,10 @@ export async function POST(req: Request) {
         status: 400,
       });
     }
+
+    // Get user session
+    const session = await auth.api.getSession({ headers: req.headers as any });
+    const userId = session?.user?.id;
 
     // imageData is optional now — if present we save the image and include imageUrl
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
@@ -69,9 +77,90 @@ export async function POST(req: Request) {
     const metaFile = path.join(uploadsDir, `${fishId}.json`);
     await fs.writeFile(metaFile, JSON.stringify(metadata, null, 2));
 
-    // Compute XP based on fish rarity and award to the logged-in user (best-effort)
-    const computeXpForRarity = (r?: string) => {
-      const rUp = String(r ?? "").toUpperCase();
+    // Award points and track sighting for logged-in users
+    if (userId) {
+      const isVerified = verification?.isValid || false;
+      const verificationScore = verification?.confidence || 0;
+
+      // Calculate points based on rarity, verification, and photo quality
+      const points = calculatePoints(
+        rarity || "COMMON",
+        isVerified,
+        photoQuality
+      );
+
+      // Save sighting to database
+      const sightingId = randomUUID();
+      await db.insert(schema.userSightings).values({
+        id: sightingId,
+        userId,
+        fishId,
+        fishName: fishName || "Unknown Fish",
+        rarity: rarity || "COMMON",
+        latitude: latitude || null,
+        longitude: longitude || null,
+        imageUrl,
+        verified: isVerified,
+        verificationScore,
+        photoQuality: photoQuality || null,
+        points,
+        region: region || null,
+        timestamp: new Date(timestamp || Date.now()),
+        createdAt: new Date(),
+      } as any);
+
+      // Update user progress
+      await updateUserProgress(
+        userId,
+        fishId,
+        rarity || "COMMON",
+        points,
+        isVerified
+      );
+    }
+
+    return new Response(JSON.stringify({ success: true, metadata }), {
+      status: 201,
+    });
+  } catch (err: any) {
+    console.error("/api/sightings POST error:", err);
+    return new Response(
+      JSON.stringify({ error: err?.message ?? String(err) }),
+      { status: 500 }
+    );
+  }
+}
+
+// Update user progress with new sighting
+async function updateUserProgress(
+  userId: string,
+  fishId: string,
+  rarity: string,
+  points: number,
+  isVerified: boolean
+) {
+  try {
+    // Get existing progress
+    const existing = await db
+      .select()
+      .from(schema.userProgress)
+      .where(eq(schema.userProgress.userId, userId));
+
+    // Check if this is a new unique fish
+    const existingSightings = await db
+      .select()
+      .from(schema.userSightings)
+      .where(
+        and(
+          eq(schema.userSightings.userId, userId),
+          eq(schema.userSightings.fishId, fishId)
+        )
+      );
+
+    const isNewFish = existingSightings.length === 1; // Just added first one
+
+    const computeXp = (r: string) => {
+      const rUp = r.toUpperCase();
       switch (rUp) {
         case "EPIC":
           return 75;
@@ -86,39 +175,6 @@ export async function POST(req: Request) {
       }
     };
 
-    const xpToAdd = computeXpForRarity(rarity);
-    awardXpForUserIfPresent(req, xpToAdd).catch((e) => {
-      // already logged inside helper, but guard any unexpected errors
-      console.error("awardXpForUserIfPresent invocation error:", e);
-    });
-
-    return new Response(JSON.stringify({ success: true, metadata }), {
-      status: 201,
-    });
-  } catch (err: any) {
-    console.error("/api/sightings POST error:", err);
-    return new Response(
-      JSON.stringify({ error: err?.message ?? String(err) }),
-      { status: 500 }
-    );
-  }
-}
-
-// Award XP to the logged in user when they mark a fish as seen.
-// We keep a separate `user_progress` table and update/insert into it.
-async function awardXpForUserIfPresent(req: Request, xpToAdd = 10) {
-  try {
-    // better-auth expects headers-like object
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    const userId = session?.user?.id;
-    if (!userId) return;
-
-    // fetch existing progress
-    const existing = await db
-      .select()
-      .from(schema.userProgress)
-      .where(eq(schema.userProgress.userId, userId));
-
     const computeRank = (xp: number) => {
       if (xp >= 2000) return "Master";
       if (xp >= 500) return "Expert";
@@ -126,27 +182,126 @@ async function awardXpForUserIfPresent(req: Request, xpToAdd = 10) {
       return "Beginner";
     };
 
+    const xpToAdd = computeXp(rarity);
     const now = new Date();
+
     if (existing && existing.length > 0) {
       const current = existing[0];
       const newXp = (Number(current.xp) || 0) + xpToAdd;
-      const newRank = computeRank(newXp);
+      const newTotalPoints = (Number(current.totalPoints) || 0) + points;
+      const newTotalSightings = (Number(current.totalSightings) || 0) + 1;
+      const newUniqueFish = isNewFish
+        ? (Number(current.uniqueFishSpotted) || 0) + 1
+        : current.uniqueFishSpotted;
+      const newRareFish =
+        isNewFish && rarity.toUpperCase() === "RARE"
+          ? (Number(current.rareFishSpotted) || 0) + 1
+          : current.rareFishSpotted;
+      const newEpicFish =
+        isNewFish && rarity.toUpperCase() === "EPIC"
+          ? (Number(current.epicFishSpotted) || 0) + 1
+          : current.epicFishSpotted;
+      const newVerifiedSightings = isVerified
+        ? (Number(current.verifiedSightings) || 0) + 1
+        : current.verifiedSightings;
+
       await db
         .update(schema.userProgress)
-        .set({ xp: newXp, rank: newRank, updatedAt: now })
+        .set({
+          xp: newXp,
+          rank: computeRank(newXp),
+          totalPoints: newTotalPoints,
+          totalSightings: newTotalSightings,
+          uniqueFishSpotted: newUniqueFish,
+          rareFishSpotted: newRareFish,
+          epicFishSpotted: newEpicFish,
+          verifiedSightings: newVerifiedSightings,
+          updatedAt: now,
+        })
         .where(eq(schema.userProgress.userId, userId));
+
+      // Check for new achievements
+      const stats = {
+        totalSightings: newTotalSightings,
+        uniqueFishSpotted: newUniqueFish,
+        rareFishSpotted: newRareFish,
+        epicFishSpotted: newEpicFish,
+        verifiedSightings: newVerifiedSightings,
+        totalPoints: newTotalPoints,
+      };
+
+      const currentAchievements = await db
+        .select()
+        .from(schema.userAchievements)
+        .where(eq(schema.userAchievements.userId, userId));
+
+      const currentAchievementIds = currentAchievements.map(
+        (a) => a.achievementId
+      );
+      const newAchievements = checkNewAchievements(
+        stats,
+        currentAchievementIds
+      );
+
+      // Award new achievements
+      for (const achievement of newAchievements) {
+        await db.insert(schema.userAchievements).values({
+          id: randomUUID(),
+          userId,
+          achievementId: achievement.id,
+          achievementName: achievement.name,
+          achievementDescription: achievement.description,
+          achievementIcon: achievement.icon,
+          achievementTier: achievement.tier,
+          points: achievement.points,
+          unlockedAt: now,
+        } as any);
+      }
     } else {
+      // Create new progress entry
       const newRank = computeRank(xpToAdd);
       await db.insert(schema.userProgress).values({
         userId,
         xp: xpToAdd,
         rank: newRank,
+        totalPoints: points,
+        totalSightings: 1,
+        uniqueFishSpotted: 1,
+        rareFishSpotted: rarity.toUpperCase() === "RARE" ? 1 : 0,
+        epicFishSpotted: rarity.toUpperCase() === "EPIC" ? 1 : 0,
+        verifiedSightings: isVerified ? 1 : 0,
         updatedAt: now,
       } as any);
+
+      // Check for first achievements
+      const stats = {
+        totalSightings: 1,
+        uniqueFishSpotted: 1,
+        rareFishSpotted: rarity.toUpperCase() === "RARE" ? 1 : 0,
+        epicFishSpotted: rarity.toUpperCase() === "EPIC" ? 1 : 0,
+        verifiedSightings: isVerified ? 1 : 0,
+        totalPoints: points,
+      };
+
+      const newAchievements = checkNewAchievements(stats, []);
+
+      // Award new achievements
+      for (const achievement of newAchievements) {
+        await db.insert(schema.userAchievements).values({
+          id: randomUUID(),
+          userId,
+          achievementId: achievement.id,
+          achievementName: achievement.name,
+          achievementDescription: achievement.description,
+          achievementIcon: achievement.icon,
+          achievementTier: achievement.tier,
+          points: achievement.points,
+          unlockedAt: now,
+        } as any);
+      }
     }
   } catch (e) {
-    // award XP is best-effort — don't block the main response
-    console.error("awardXpForUserIfPresent error:", e);
+    console.error("updateUserProgress error:", e);
   }
 }
 
@@ -177,21 +332,6 @@ export async function DELETE(req: Request) {
     );
     try {
       await fs.unlink(metaFile);
-      // Revoke XP for the logged-in user (best-effort) when they undo a sighting
-      // compute xp to subtract based on optional rarity query param or body
-      const rarityParam = url.searchParams.get("rarity");
-      let xpToSubtract = 10;
-      if (rarityParam) {
-        const rUp = String(rarityParam).toUpperCase();
-        if (rUp === "EPIC") xpToSubtract = 75;
-        else if (rUp === "RARE") xpToSubtract = 25;
-        else if (rUp === "UNCOMMON") xpToSubtract = 15;
-        else if (rUp === "COMMON") xpToSubtract = 5;
-      }
-      revokeXpForUserIfPresent(req, xpToSubtract).catch((e) => {
-        console.error("revokeXpForUserIfPresent invocation error:", e);
-      });
-
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     } catch (e) {
       return new Response(
@@ -205,41 +345,6 @@ export async function DELETE(req: Request) {
       JSON.stringify({ error: err?.message ?? String(err) }),
       { status: 500 }
     );
-  }
-}
-
-// Revoke XP (subtract) from the logged in user when they undo a sighting.
-// Best-effort: won't block or throw to the main handler.
-async function revokeXpForUserIfPresent(req: Request, xpToSubtract = 10) {
-  try {
-    const session = await auth.api.getSession({ headers: req.headers as any });
-    const userId = session?.user?.id;
-    if (!userId) return;
-
-    const existing = await db
-      .select()
-      .from(schema.userProgress)
-      .where(eq(schema.userProgress.userId, userId));
-
-    const computeRank = (xp: number) => {
-      if (xp >= 2000) return "Master";
-      if (xp >= 500) return "Expert";
-      if (xp >= 100) return "Intermediate";
-      return "Beginner";
-    };
-
-    const now = new Date();
-    if (existing && existing.length > 0) {
-      const current = existing[0];
-      const newXp = Math.max(0, (Number(current.xp) || 0) - xpToSubtract);
-      const newRank = computeRank(newXp);
-      await db
-        .update(schema.userProgress)
-        .set({ xp: newXp, rank: newRank, updatedAt: now })
-        .where(eq(schema.userProgress.userId, userId));
-    }
-  } catch (e) {
-    console.error("revokeXpForUserIfPresent error:", e);
   }
 }
 
