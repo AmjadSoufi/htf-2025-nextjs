@@ -138,9 +138,9 @@ export default function FishCard({ fish, onHover, onClick }: FishCardProps) {
       setUploading(true);
       try {
         const res = await fetch(
-          `/api/sightings?fishId=${encodeURIComponent(fish.id)}&rarity=${encodeURIComponent(
-            fish.rarity ?? "COMMON"
-          )}`,
+          `/api/sightings?fishId=${encodeURIComponent(
+            fish.id
+          )}&rarity=${encodeURIComponent(fish.rarity ?? "COMMON")}`,
           {
             method: "DELETE",
           }

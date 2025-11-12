@@ -27,13 +27,19 @@ export async function GET(req: Request) {
 
     const row = rows[0];
     return new Response(
-      JSON.stringify({ success: true, data: { xp: Number(row.xp) || 0, rank: row.rank } }),
+      JSON.stringify({
+        success: true,
+        data: { xp: Number(row.xp) || 0, rank: row.rank },
+      }),
       { status: 200 }
     );
   } catch (err: any) {
     console.error("/api/user/progress GET error:", err);
-    return new Response(JSON.stringify({ error: String(err?.message ?? err) }), {
-      status: 500,
-    });
+    return new Response(
+      JSON.stringify({ error: String(err?.message ?? err) }),
+      {
+        status: 500,
+      }
+    );
   }
 }

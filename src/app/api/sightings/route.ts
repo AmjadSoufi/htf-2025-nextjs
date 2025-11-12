@@ -8,8 +8,8 @@ import { eq } from "drizzle-orm";
 
 export async function POST(req: Request) {
   try {
-  const body = await req.json();
-  const { fishId, latitude, longitude, timestamp, imageData, rarity } = body;
+    const body = await req.json();
+    const { fishId, latitude, longitude, timestamp, imageData, rarity } = body;
 
     if (!fishId) {
       return new Response(JSON.stringify({ error: "Missing fishId" }), {
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       });
     }
 
-  // imageData is optional now — if present we save the image and include imageUrl
+    // imageData is optional now — if present we save the image and include imageUrl
     const uploadsDir = path.join(process.cwd(), "public", "uploads");
     await fs.mkdir(uploadsDir, { recursive: true });
 

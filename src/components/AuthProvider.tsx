@@ -72,7 +72,8 @@ export function UserInfo() {
         <p className="text-sm text-text-secondary">{session.user.email}</p>
         {progress ? (
           <p className="text-sm text-text-secondary mt-1">
-            XP: <span className="font-medium text-sonar-green">{progress.xp}</span>{" "}
+            XP:{" "}
+            <span className="font-medium text-sonar-green">{progress.xp}</span>{" "}
             • Rank: <span className="font-medium">{progress.rank}</span>
           </p>
         ) : (
